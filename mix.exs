@@ -7,14 +7,17 @@ defmodule WeatherflowTempest.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      deps: deps(),
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      mod: {WeatherflowTempest.Application, []},
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -23,6 +26,23 @@ defmodule WeatherflowTempest.MixProject do
     [
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:ex_doc, "~> 0.23", only: :dev, runtime: false},
+      {:jason, "~> 1.0"},
+    ]
+  end
+
+  defp description do
+    """
+    Library for monitoring a WeatherFlow weather station via its UDP output
+    """
+  end
+
+  defp package do
+    [
+      files: ["lib", "mix.exs", "README*", "LICENCSE*"],
+      maintainers: ["Josh Proehl"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/joshproehl/weatherflow_tempest"}
     ]
   end
 end

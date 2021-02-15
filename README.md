@@ -1,6 +1,8 @@
-# WeatherflowTempest
+# Weatherflow Tempest
 
-**TODO: Add description**
+This library helps you interact with a Weatherflow weather station over the LAN. It supports any device supported by their UDP API, currently the Tempest as well as Air/Sky/Hub.
+
+Current Weatherflow UDP API version targeted is [143](https://weatherflow.github.io/Tempest/api/udp/v143/).
 
 ## Installation
 
@@ -18,4 +20,7 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/weatherflow_tempest](https://hexdocs.pm/weatherflow_tempest).
+
+## Usage
+
 
