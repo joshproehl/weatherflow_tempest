@@ -13,11 +13,13 @@ defmodule WeatherflowTempest.Client do
       socket: port(),
       packets_parsed: integer(),
       packet_errors: integer(),
+      last_error: Map.t(),
       hubs: Map.t()
     }
     defstruct socket: nil,
               packets_parsed: 0,
               packet_errors: 0,
+              last_error: %{},
               hubs: %{}
     
     # Delegate Access behaviour so we can use put_in to deeply-nested update hub info
@@ -157,8 +159,9 @@ defmodule WeatherflowTempest.Client do
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
-  defp update_state({:error, :json_error}, state) do
+  defp update_state({:error, jason_error}, state) do
     {:noreply, state
+               |> Map.put(:last_error, jason_error)
                |> Map.update(:packet_errors, 0, &(&1 + 1))}
   end
 

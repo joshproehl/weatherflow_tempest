@@ -10,8 +10,8 @@ defmodule WeatherflowTempest.Protocol do
   use Timex
   
   @spec handle_json(Map.t()) :: Map.t()
-  def handle_json({:error, %Jason.DecodeError{} = err}) do
-    {:error, :json_error}
+  def handle_json({:error, %Jason.DecodeError{}} = err) do
+    err
   end
 
   def handle_json({:ok, %{"type" => "evt_precip"} = obj}) do
