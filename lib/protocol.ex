@@ -80,6 +80,8 @@ defmodule WeatherflowTempest.Protocol do
                      |> Map.delete("type")
                      |> Map.put(:sensor_status, parse_device_sensor_status(obj["sensor_status"]))
                      |> Map.delete("sensor_status")
+                     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
+                     |> Map.delete("uptime")
                      |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
                      |> Map.delete("timestamp")}
   end
@@ -87,7 +89,7 @@ defmodule WeatherflowTempest.Protocol do
   def handle_json({:ok, %{"type" => "hub_status"} = obj}) do
     {:hub_status, obj
                   |> Map.delete("type")
-                  |> Map.put(:uptime, hub_uptime_to_string(obj["uptime"]))
+                  |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
                   |> Map.delete("uptime")
                   |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
                   |> Map.delete("timestamp")
@@ -173,7 +175,7 @@ defmodule WeatherflowTempest.Protocol do
     } 
   end
 
-  defp hub_uptime_to_string(up_seconds) do
+  defp uptime_seconds_to_string(up_seconds) do
     uptime = Duration.from_seconds(up_seconds)
     Timex.format_duration(uptime, :humanized)
   end
