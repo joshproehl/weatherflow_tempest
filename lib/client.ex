@@ -83,7 +83,7 @@ defmodule WeatherflowTempest.Client do
   end
 
   @impl true
-  def handle_info({:udp, _socket, ip, _port, payload}, state) do
+  def handle_info({:udp, _socket, _ip, _port, payload}, state) do
     Jason.decode(payload)
     |> Protocol.handle_json
     |> update_state(state)
