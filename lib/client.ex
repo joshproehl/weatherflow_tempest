@@ -73,6 +73,10 @@ defmodule WeatherflowTempest.Client do
     GenServer.call(__MODULE__, {:get_packet_stats})
   end
 
+  def get_hub_serials() do
+    GenServer.call(__MODULE__, {:get_hub_serials})
+  end
+
 
   ####################
   # Server (Callbacks)
@@ -99,6 +103,11 @@ defmodule WeatherflowTempest.Client do
   @impl true
   def handle_call({:get_packet_stats}, _from, state) do
     {:reply, %{packets_parsed: state.packets_parsed, packet_errors: state.packet_errors}, state}
+  end
+
+  @impl true
+  def handle_call({:get_hub_serials}, _from, state) do
+    {:reply, Enum.map(state.hubs, fn {k, _v} -> k end), state}
   end
 
   #########
