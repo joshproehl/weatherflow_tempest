@@ -29,6 +29,7 @@ defmodule WeatherflowTempest.MixProject do
       {:ex_doc, "~> 0.23", only: :dev, runtime: false},
       {:jason, "~> 1.0"},
       {:timex, "~> 3.6"},
+      {:phoenix_pubsub, "~> 2.0"},
     ]
   end
 

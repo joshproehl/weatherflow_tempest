@@ -5,7 +5,7 @@ defmodule WeatherflowTempest.Application do
 
   def start(_type, _agrs) do
     children = [
-      #{WeatherflowTempest.Supervisor, name: WeatherflowTempest.Supervisor}
+      {Phoenix.PubSub, [name: Application.get_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)]},
       {WeatherflowTempest.Client, []},
     ]
 
