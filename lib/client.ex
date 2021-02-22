@@ -1,7 +1,8 @@
 defmodule WeatherflowTempest.Client do
-  @moduledoc
-  """
+  @moduledoc """
   Listens for packets from Weatherflow devices on the LAN and stores their latest state/update in its own state.
+
+  Outputs events via Phoenix PubSub on channel name :weatherflow_tempest
   """
 
   use GenServer
@@ -61,18 +62,28 @@ defmodule WeatherflowTempest.Client do
   ########
   # Client
 
+  @doc false
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
+  @doc """
+  Get all the latest data that the client has received.
+  """
   def get_latest() do
     GenServer.call(__MODULE__, {:get_latest})
   end
 
+  @doc """
+  Get the total number of UDP packets and errors received by the client.
+  """
   def get_packet_stats() do
     GenServer.call(__MODULE__, {:get_packet_stats})
   end
 
+  @doc """
+  Get a list of serial numbers of Weatherflow Hubs that have been heard from.
+  """
   def get_hub_serials() do
     GenServer.call(__MODULE__, {:get_hub_serials})
   end

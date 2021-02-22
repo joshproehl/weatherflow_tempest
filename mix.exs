@@ -10,6 +10,8 @@ defmodule WeatherflowTempest.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
+      name: "Weatherflow Tempest",
+      docs: docs(),
     ]
   end
 
@@ -36,7 +38,7 @@ defmodule WeatherflowTempest.MixProject do
 
   defp description do
     """
-    Library for monitoring a WeatherFlow weather station via its UDP output
+    Convert the UDP messages from a WeatherFlow weather station into Phoenix.PubSub messages
     """
   end
 
@@ -45,7 +47,17 @@ defmodule WeatherflowTempest.MixProject do
       files: ["lib", "mix.exs", "README*", "LICENCSE*"],
       maintainers: ["Josh Proehl"],
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/joshproehl/weatherflow_tempest"}
+      links: %{
+        "GitHub" => "https://github.com/joshproehl/weatherflow_tempest",
+        "Docs" => "https://hexdocs.pm/weatherflow_tempest",
+      }
+    ]
+  end
+
+  defp docs do
+    [
+      extras: ["README.md": [filename: "readme", title: "Weatherflow Tempest"]],
+      main: "readme"
     ]
   end
 end

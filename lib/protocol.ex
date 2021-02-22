@@ -1,17 +1,30 @@
 defmodule WeatherflowTempest.Protocol do
   @moduledoc """
-    The Protocol has a lot of magic fields. This parses and converts them to make the returned objects more intelligible.
+  The Weatherflow Protocol has a lot of magic fields. This parses and converts them to make the returned objects more intelligible.
 
-    This will standardarize some field names, as well as make everything a named top-level field.
-    Basically it unpacks their byte-effecient arrays of values into something easier to grok, and standardizes some field names.
+  Byte-effecient arrays are unpacked into named fields based on the protocol docs published by Weathperflow.
+
+  The following field standardizations are made to all event types:
+    * "type" fields are removed.
+    * "evt" fields containing the raw un-parsed event data are removed
+    * "uptime" fields containing seconds-of-uptime are converted to human readable uptime strings
+    * "timestamp" field containing the epoch time are converted to DateTime
+  All fields that are converted are named using atoms rather than strings, however fields that are not changed retain their string-based keys.
   """
 
   use Bitwise
   use Timex
   
-  @spec handle_json(Map.t()) :: Map.t()
-  def handle_json({:error, %Jason.DecodeError{}} = err) do
-    err
+  @doc """
+  Accepts the result tuple of Jason.decode()
+  If the JSON could not be decoded bubble the error up to be handled by the client.
+  Otherwise parse the event types defined by the Weatherflow spec.
+
+  Returns a tuple containing an atom matching the event "type" field, followed by the parsed object as a map.
+  """
+  @spec handle_json({atom(), Map.t()}) :: Map.t()
+  def handle_json({:error, %Jason.DecodeError{}} = arg) do
+    arg
   end
 
   def handle_json({:ok, %{"type" => "evt_precip"} = obj}) do
