@@ -32,9 +32,11 @@ Configure the PubSub output in your config.exs (or _env_.exs):
 ```elixir
 config :weatherflow_tempest, :pubsub_name, MyApp.PubSub
 ```
-If none is defined it will output to a pubsub named :weatherflow_tempest
+If none is defined it will start a pubsub named :weatherflow_tempest and output events there.
 
 ## Usage
+
+
 
 ## License
 MIT License

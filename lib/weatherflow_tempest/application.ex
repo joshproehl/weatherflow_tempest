@@ -5,11 +5,18 @@ defmodule WeatherflowTempest.Application do
 
   def start(_type, _agrs) do
     children = [
-      {Phoenix.PubSub, [name: Application.get_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)]},
       {WeatherflowTempest.Client, []},
     ]
+    ++ maybe_start_pubsub()
 
     opts = [strategy: :one_for_one, name: WeatherflowTempest]
     Supervisor.start_link(children, opts)
+  end
+
+  defp maybe_start_pubsub() do
+    case Application.get_env(:weatherflow_tempest, :pubsub_name) do
+      nil -> [{Phoenix.PubSub, [name: WeatherflowTempest.PubSub.get_pubsub_name()]}]
+      _ -> []
+    end
   end
 end
