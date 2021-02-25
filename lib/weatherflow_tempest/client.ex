@@ -2,7 +2,9 @@ defmodule WeatherflowTempest.Client do
   @moduledoc """
   Listens for packets from Weatherflow devices on the LAN and stores their latest state/update in its own state.
 
-  Outputs events via Phoenix PubSub on channel name :weatherflow_tempest
+  Outputs events via `WeatherflowTempest.PubSub.udp_event_broadcast/2`.
+
+  Events containing observations are flattened into a single observation with all observation keys as top-level keys.
   """
 
   use GenServer
