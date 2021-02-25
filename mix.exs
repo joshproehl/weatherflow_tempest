@@ -44,7 +44,7 @@ defmodule WeatherflowTempest.MixProject do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README*", "LICENCSE*"],
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Josh Proehl"],
       licenses: ["MIT"],
       links: %{
