@@ -141,34 +141,58 @@ defmodule WeatherflowTempest.Client do
   end
 
   defp update_state({:rapid_wind, obj}, state) do
-    WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, obj)
+    flattened_obj = obj
+                    |> Map.delete(:observation)
+                    |> Map.merge(obj.observation)
+    WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, flattened_obj)
     {:noreply, state
                |> ensure_hub_sn_key(obj)
-               |> put_in([:hubs, obj["hub_sn"], :rapid_wind], obj)
+               |> put_in([:hubs, obj["hub_sn"], :rapid_wind], flattened_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
   defp update_state({:obs_air, obj}, state) do
-    WeatherflowTempest.PubSub.udp_event_broadcast(:observation_air, obj)
+    base_obj = Map.delete(obj, :observations)
+
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+      merged_obj = Map.merge(base_obj, obs)
+      WeatherflowTempest.PubSub.udp_event_broadcast(:observation_air, merged_obj)
+      collector = merged_obj
+    end)
+
     {:noreply, state
                |> ensure_hub_sn_key(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_air], obj)
+               |> put_in([:hubs, obj["hub_sn"], :observation_air], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
   defp update_state({:obs_sky, obj}, state) do
-    WeatherflowTempest.PubSub.udp_event_broadcast(:observation_sky, obj)
+    base_obj = Map.delete(obj, :observations)
+
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+      merged_obj = Map.merge(base_obj, obs)
+      WeatherflowTempest.PubSub.udp_event_broadcast(:observation_sky, merged_obj)
+      collector = merged_obj
+    end)
+
     {:noreply, state
                |> ensure_hub_sn_key(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_sky], obj)
+               |> put_in([:hubs, obj["hub_sn"], :observation_sky], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
   defp update_state({:obs_st, obj}, state) do
-    WeatherflowTempest.PubSub.udp_event_broadcast(:observation_tempest, obj)
+    base_obj = Map.delete(obj, :observations)
+
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+      merged_obj = Map.merge(base_obj, obs)
+      WeatherflowTempest.PubSub.udp_event_broadcast(:observation_tempest, merged_obj)
+      collector = merged_obj
+    end)
+
     {:noreply, state
                |> ensure_hub_sn_key(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_tempest], obj)
+               |> put_in([:hubs, obj["hub_sn"], :observation_tempest], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
