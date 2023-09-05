@@ -9,8 +9,9 @@ defmodule WeatherflowTempest.Protocol do
   The following field standardizations are made to all event types:
     * "type" fields are removed.
     * "evt" fields containing the raw un-parsed event data are removed
-    * "uptime" fields containing seconds-as-integers are converted to human-readable
-      strings such as "1 week, 4 days, 3 hours, 16 minutes"
+    * "uptime" fields containing seconds-as-integers are given human-readable string
+      representations such as "1 week, 4 days, 3 hours, 16 minutes", which are
+      placed in an :uptime_string field
     * "timestamp" field containing the epoch time are converted to DateTime
   All fields that are converted are named using atoms rather than strings, however
   fields that are not changed retain their string-based keys.
@@ -99,7 +100,8 @@ defmodule WeatherflowTempest.Protocol do
      |> Map.delete("type")
      |> Map.put(:sensor_status, parse_device_sensor_status(obj["sensor_status"]))
      |> Map.delete("sensor_status")
-     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
+     |> Map.put(:uptime, obj["uptime"])
+     |> Map.put(:uptime_string, uptime_seconds_to_string(obj["uptime"]))
      |> Map.delete("uptime")
      |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
      |> Map.delete("timestamp")}
@@ -110,7 +112,8 @@ defmodule WeatherflowTempest.Protocol do
      obj
      |> Map.put(:hub_sn, obj["serial_number"])
      |> Map.delete("type")
-     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
+     |> Map.put(:uptime, obj["uptime"])
+     |> Map.put(:uptime_string, uptime_seconds_to_string(obj["uptime"]))
      |> Map.delete("uptime")
      |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
      |> Map.delete("timestamp")
