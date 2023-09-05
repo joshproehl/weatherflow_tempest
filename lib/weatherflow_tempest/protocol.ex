@@ -7,7 +7,7 @@ defmodule WeatherflowTempest.Protocol do
   published by Weatherflow.
 
   The following field standardizations are made to all event types:
-    * "type" fields are removed. (Use the whole {:type, %{}} tuple)
+    * "type" fields are removed. (Use the whole `{:type, %{}}` tuple)
     * "evt" fields containing the raw un-parsed event data are removed, and the data
       from those fields is flattened into a single event map.
     * "uptime" fields containing seconds-as-integers are given human-readable string
@@ -16,15 +16,17 @@ defmodule WeatherflowTempest.Protocol do
     * "timestamp" field containing the epoch time are converted to DateTime
     * All fields are converted to use atoms as keys. The only string keys used will
       be device serial numbers, i.e.:
+
       ```
-      device_statuses: %{
-          "AR-00000001" => %{
-              firmware_revision: 23
-          }
-      }
+        device_statuses: %{
+            "AR-00000001" => %{
+                firmware_revision: 23
+            }
+        }
+      ```
+
     * :hub_sn key is added to the hub_status message type, allowing easy pattern
       matching for all events from a given hub.
-      ```
 
   ## Notes:
   * The hub_status event returns a firmware_revision as a string rather than an

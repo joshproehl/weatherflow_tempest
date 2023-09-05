@@ -4,14 +4,14 @@ defmodule WeatherflowTempest.MixProject do
   def project do
     [
       app: :weatherflow_tempest,
-      version: "0.1.0",
-      elixir: "~> 1.10", # ExDoc require 1.10
+      name: "Weatherflow Tempest",
+      description: "A library for handling the data from the LAN API for WeatherFlow weather stations.",
+      version: "1.0.0",
+      elixir: "~> 1.11", # ExDoc 0.29 requires 1.11
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      description: description(),
       package: package(),
       deps: deps(),
-      name: "Weatherflow Tempest",
       docs: docs(),
     ]
   end
@@ -31,22 +31,16 @@ defmodule WeatherflowTempest.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
       {:jason, "~> 1.0"},
       {:timex, "~> 3.6"},
-      {:phoenix_pubsub, "~> 2.0"},
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false}, # Use 0.29 min to get admonition blocks, but not require any higher elixir version than 1.11
+      {:phoenix_pubsub, "~> 2.0", only: [:dev, :test]},
     ]
-  end
-
-  defp description do
-    """
-    Convert the UDP messages from a WeatherFlow weather station into Phoenix.PubSub messages
-    """
   end
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README*", "LICENSE*"],
+      files: ["lib", "mix.exs", "CHANGELOG.md", "README.md", "LICENSE.md"],
       maintainers: ["Josh Proehl"],
       licenses: ["MIT"],
       links: %{
@@ -58,7 +52,11 @@ defmodule WeatherflowTempest.MixProject do
 
   defp docs do
     [
-      extras: ["README.md": [filename: "readme", title: "Weatherflow Tempest"]],
+      extras: [
+        "README.md": [filename: "readme", title: "Weatherflow Tempest"],
+        "CHANGELOG.md": [filename: "changelog", title: "Changelog"],
+        "LICENSE.md": [filename: "license", title: "License"],
+      ],
       main: "readme"
     ]
   end

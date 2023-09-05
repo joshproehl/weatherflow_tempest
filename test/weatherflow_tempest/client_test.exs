@@ -19,11 +19,13 @@ defmodule WeatherflowTempest.ClientTest do
   end
 
   # Notes:
-  # - Do we need to test that sending a message, and then a second message,
-  #   updates the state to reflect the latest?
-  # - Do we need to validate out-of-chronological-order messages?
   # - Should we check that no *other* messages are in the inbox?
   #   refute_receive to check that that the client isn't sending extra data?
+  #   Could do this by checking that Process.info(self(), :message_queue_len)
+  #   returns {:message_queue_len, 0} at the end of every test?
+  # - Do we need to test the no-callback-no-pubsub state?
+  # - TODO: We need to test the callback function(s) works.
+  #         https://thepugautomatic.com/2015/09/testing-callbacks-in-elixir/
 
   test "tracks the number of JSON packets recevived that did not contain parsable JSON" do
     {:noreply, new_state} = mock_receive_message("{badpacket:\"malformed JSON\"}")
@@ -43,7 +45,7 @@ defmodule WeatherflowTempest.ClientTest do
            }} = mock_receive_message("{\"badpacket\":malformed JSON\"}")
   end
 
-  # The following tests are designed to ensure that each type of message casues
+  # The following tests are designed to ensure that each type of message causes
   # the expected events when it is received by the client.
   # What we want is to make sure that each message updates the state in the
   # expected ways, and that it emits the expected pubsub events.

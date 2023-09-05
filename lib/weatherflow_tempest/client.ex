@@ -1,25 +1,281 @@
 defmodule WeatherflowTempest.Client do
   @moduledoc """
-  Listens for packets from Weatherflow devices on the LAN and stores their latest
-  state/update in its own state.
+  Listens for packets from Weatherflow devices on the LAN, parses them, and
+  stores their latest state/update in its own state, while emitting the
+  parsed events via either a callback function or a Phoenix.PubSub broadcast.
 
-  Outputs events via `WeatherflowTempest.PubSub.udp_event_broadcast/2`.
+  ## Changes from UDP API
 
-  Events containing observations are flattened into a single observation with all
-  observation keys as top-level keys.
+  It's important to note that we make some changes to the structure of the
+  results returned by the raw WeartherFlow UDP API:
+    * Events containing observations are flattened into a single observation
+    with all observation keys as top-level keys, rather than objects with
+    nested "obs" keys.
+    * Events containing lists of observations are emitted as multiple events. 
+    * Event names are altered to be more descriptive. See the
+      [Event Examples](#module-event-examples) section below for event names
+      and example return data.
 
-  For observations, we'll get a list of observations. Sometimes.
-  It's unclear when the devices will actually do this, and in testing
-  with live devices it hasn't actually been observed.
-  However, to accomodate the case that it might happen what we'll do is
-  iterate the list, emitting a PubSub broadcast for **each** unique
-  observation, but only saving the most recent into the state.
-  (Since the Protocol handler is responsible for sorting by ascending
-  timestamp we will assume that the last item in the list is the most
-  recent observation.)
-  
-  This will allow any other module taking advantage of the PubSub
-  broadcasts to get complete data.
+  It is unclear when the devices will actually return a list of observations in
+  a single "obs" list, and in testing with live devices it hasn't actually been
+  observed.   
+  However, to accomodate the case that it might happen what we'll do is create
+  a unique event for every item in the observation list, and emit them in order
+  of ascending timestamp. These will be the flattened events described above.  
+  This simplifies handling the events from the perspective of users of the
+  library, since it makes the expected output completely predictable.
+
+
+  ## Usage
+
+  There are two ways to get data from the Client: 
+    1) via a callback function
+    2) via Phoenix.PubSub
+
+  You can use either, or both, depending on your needs.
+
+  ### via Callback Function
+
+  A callback function is passed in to the `start_link` function as part of the
+  options list, under the "callback_func" key. (Multiple can be passed in, and
+  will all be called.)
+  The callback function will be called with two arguments:
+    1) the event type, as an atom
+    2) the event data, as a map
+
+  ```elixir
+  def handle_weatherflow_event(event_type, event_data) do
+    # do something with the data received from the event
+  end
+
+  {:ok, pid} = WeatherflowTempest.Client.start_link([callback_func: &handle_weatherflow_event/2])
+  ```
+
+  > #### Blocking Callback Warning {: .warning}
+  > Your callback functions will block the client from processing any further
+  > data, so efforts should be made to keep them as lightweight as possible,
+  > and hand off any complex processing.
+
+  It is worth noting that the callback function will *not* be notified of any
+  JSON parsing errors, only successfully parsed events.
+
+  ### via Phoenix.Pubsub
+
+  If you'd prefer to receive events via Phoenix.PubSub, you can configure the
+  pubsub you'd like to use in your config file:
+  ```elixir
+  config :weatherflow_tempest, :pubsub_name, MyApp.PubSub
+  ```
+
+  You must also start the WeatherflowTempest.Client, commonly as a child of
+  your Application Supervisor in application.ex:
+  ```elixir
+  def start(_type, _args) do
+    children = [
+      {WeatherflowTempest.Client, []},
+    ]
+    opts = [strategy: one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+  ```
+
+  Events are published as an {{:weatherflow, event_type}, event_data} struct,
+  on the topic "weatherflow:udp".
+
+  To subscribe to all events the convenience function
+  `WeatherflowTempest.PubSub.subscribe_to_udp_events/0` is provided.
+  Handling all broadcast weatherflow events looks something like:
+  ```elixir
+  def handle_info({{:weatherflow, event_type}, event_data}, socket) do
+    IO.puts("Got a \#\{event_type\} message!")
+    {:noreply, socket}
+  end
+  ```
+  And of course you can match on specific event types as well.
+
+  Events are emitted to the PubSub in ascending timestamp order, but due to
+  the nature of PubSub if your usage requires that events be processed in
+  strict timeline order you may wish to use the callback function instead.
+
+
+  ## Event Examples
+
+  Both methods of receiving events will receive the same event_types and the
+  same event_data objects, the only difference is how they are received by your
+  application.
+
+  Any given "hub" should only emit both :observation_air and :observation_sky
+  events, or only emit :observation_tempest events, depending on which product
+  it is. Keeping all three observation types for each hub allows the calling
+  application to easily handle both types of hubs simply by matching on the
+  event type or value in the `%WeatherflowTempest.Client.Hub{}` struct. 
+  (The alternative, having a single :observation event/field, would require that
+  we embed the product type in the data, which would be a bit less clear to
+  handle since each type of observation contains different fields.)
+
+  Examples of the map returned by all event types are documented below:
+
+  #### :event_precipitation
+  ```elixir
+  %{
+    serial_number: "SK-00008453",
+    hub_sn: "HB-00000001",
+    timestamp: ~U[2017-04-27 19:47:25Z]
+  }
+  ```
+
+  #### :event_strike
+  ```elixir
+  %{
+    serial_number: "AR-00004049",
+    hub_sn: "HB-00000001",
+    timestamp: ~U[2017-04-27 19:47:25Z]
+  }
+  ```
+
+  #### :rapid_wind
+  ```elixir
+  %{
+    serial_number: "SK-00008453",
+    hub_sn: "HB-00000001",
+    timestamp: ~U[2017-04-27 19:47:25Z],
+    wind_speed_mps: 2.3,
+    wind_direction_degrees: 128
+  }
+  ```
+
+  #### :observation_air
+  ```elixir
+  %{
+    serial_number: "AR-00004049",
+    hub_sn: "HB-00000001",
+    firmware_revision: 17,
+    observations: [
+      %{
+        timestamp: ~U[2017-04-26 00:00:35Z],
+        station_pressure_MB: 835.0,
+        air_temperature_C: 10.0,
+        relative_humidity_percent: 45,
+        lightningstrike_count: 0,
+        lightningstrike_avg_distance_km: 0,
+        battery: 3.46,
+        reportinterval_mintues: 1
+      }
+    ]
+  }
+  ```
+
+  #### :observation_sky
+  ```elixir
+  %{
+    serial_number: "SK-00008453",
+    hub_sn: "HB-00000001",
+    firmware_revision: 29,
+    observations: [
+      %{
+        timestamp: ~U[2017-04-27 19:29:00Z],
+        illuminance_lux: 9000,
+        uv_index: 10,
+        rain_accumulated_mm: 0.0,
+        wind_lull_ms: 2.6,
+        wind_avg_ms: 4.6,
+        wind_gust_ms: 7.4,
+        wind_direction_degrees: 187,
+        battery_volts: 3.12,
+        reportinterval_minutes: 1,
+        solar_radiation_wm2: 130,
+        local_day_rain_accumulation: nil,
+        precipitation_type: :none,
+        wind_sample_interval_seconds: 3
+      }
+    ]
+  }
+  ```
+
+  #### :observation_tempest
+  ```elixir
+  %{
+    serial_number: "ST-00000512",
+    hub_sn: "HB-00013030",
+    firmware_revision: 129,
+    observations: [
+      %{
+        timestamp: ~U[2020-05-08 14:36:54Z],
+        wind_lull_ms: 0.18,
+        wind_avg_ms: 0.22,
+        wind_gust_ms: 0.27,
+        wind_direction_degrees: 144,
+        wind_sample_interval_seconds: 6,
+        station_pressure_MB: 1017.57,
+        air_temperature_C: 22.37,
+        relative_humidity_percent: 50.26,
+        illuminance_lux: 328,
+        uv_index: 0.03,
+        solar_radiation_wm2: 3,
+        precip_accumulated_mm: 0.000000,
+        precipitation_type: :none,
+        lightningstrike_avg_distance_km: 0,
+        lightningstrike_count: 0,
+        battery_volts: 2.410,
+        reportinterval_minutes: 1
+      }
+    ]
+  }
+  ```
+
+  #### :device_status
+  ```elixir
+  %{
+    serial_number: "AR-00004049",
+    hub_sn: "HB-00000001",
+    timestamp: ~U[2017-11-16 18:12:03Z],
+    uptime: 2189,
+    uptime_string: "36 minutes, 29 seconds",
+    voltage: 3.50,
+    firmware_revision: 17, 
+    rssi: -17,
+    hub_rssi: -87,
+    sensor_status: %{
+      sensors_okay: true,
+      lightning_failed: false,
+      lightning_noise: false,
+      lightning_disturber: false,
+      pressure_failed: false,
+      temperature_failed: false,
+      rh_failed: false,
+      wind_failed: false,
+      precip_failed: false,
+      light_uv_failed: false,
+      power_booster_depleted: false,
+      power_booster_shore_power: false,
+    },
+    debug: false,
+  }
+  ```
+
+  #### :hub_status
+  ```elixir
+  %{
+    hub_sn: "HB-00000001",
+    serial_number: "HB-00000001",
+    firmware_revision: "35",
+    uptime: 1670133,
+    uptime_string: "2 weeks, 5 days, 7 hours, 55 minutes, 33 seconds",
+    rssi: -62,
+    timestamp: ~U[2017-05-25 15:04:51Z],
+    reset_flags: ["Brownout reset", "PIN reset", "Power reset"],
+    seq: 48,
+    fs: :not_parsed__internal_use_only,
+    radio_stats: %{
+      version: 2,
+      reboot_count: 1,
+      i2c_bus_error_count: 0,
+      radio_status: "Radio Active",
+      radio_network_id: 2839
+    },
+    mqtt_stats: :not_parsed__internal_use_only,
+  }
+  ```
   """
 
   use GenServer
@@ -49,7 +305,12 @@ defmodule WeatherflowTempest.Client do
   end
 
   defmodule Hub do
-    @moduledoc false
+    @moduledoc """
+    A struct representing the most recent data and status of a particular hub.
+
+    Note that if a particular observation type hasn't yet been heard for this
+    hub then some keys may be empty maps.
+    """
     @type t :: %__MODULE__{
       event_precipitation: map(),
       event_strike: map(),
@@ -70,8 +331,11 @@ defmodule WeatherflowTempest.Client do
               hub_status: %{}
 
     # Delegate Access behaviour so we can use put_in to deeply-nested update hub info
+    @doc false
     defdelegate fetch(term, key), to: Map
+    @doc false
     defdelegate get(term, key, default), to: Map
+    @doc false
     defdelegate get_and_update(term, key, fun), to: Map
   end
 
@@ -84,10 +348,18 @@ defmodule WeatherflowTempest.Client do
   end
 
   @doc """
-  Get all the latest data that the client has received.
+  Get all the latest data that the client has heard.
 
-  Returns a map where each key is a string for the hub serial, and the value is a
-  `%WeatherflowTempest.Client.Hub` struct.
+  Note that the resulting WeatherflowTempest.Client.Hub struct may contain
+  empty fields if the client hasn't heard certain types of events yet.
+
+  ## Examples
+
+      iex> WeatherflowTempest.Client.get_latest()
+      %{
+        "HUB_SERIAL_ONE" => %WeatherflowTempest.Client.Hub{...}
+      }
+
   """
   @spec get_latest() :: %{String.t() => WeatherflowTempest.Client.Hub.t()}
   def get_latest() do
@@ -96,6 +368,15 @@ defmodule WeatherflowTempest.Client do
 
   @doc """
   Get the total number of UDP packets and errors received by the client.
+
+  ## Examples
+  
+      iex> WeatherflowTempest.Client.get_packet_stats()
+      %{
+        packets_parsed: 123,
+        packet_errors: 0
+      }
+
   """
   @spec get_packet_stats() :: map()
   def get_packet_stats() do
@@ -104,6 +385,12 @@ defmodule WeatherflowTempest.Client do
 
   @doc """
   Get a list of serial numbers of Weatherflow Hubs that have been heard from.
+
+  ## Examples
+  
+      iex> WeatherflowTempest.Client.get_hub_serials()
+      ["HUB_SERIAL_ONE", "HUB_SERIAL_TWO"]
+
   """
   @spec get_hub_serials() :: [String.t()]
   def get_hub_serials() do
@@ -155,6 +442,9 @@ defmodule WeatherflowTempest.Client do
   #########
   # update_state and associated functions
   # Handle each type of possible response returned by Protocol.handle_json
+  # (Since the Protocol handler is responsible for sorting by ascending
+  # timestamp we will assume that the last item in the list is the most
+  # recent observation.)
   # At this point this function should be more correctly named
   # "broadcast_and_update_state" or something like that, or should have
   # yet another level of functions that it calls to break up updating state
