@@ -195,7 +195,9 @@ defmodule WeatherflowTempest.Protocol do
       rh_failed: (bf &&& 0b000100000) == 0b000100000,
       wind_failed: (bf &&& 0b001000000) == 0b001000000,
       precip_failed: (bf &&& 0b010000000) == 0b010000000,
-      light_uv_failed: (bf &&& 0b100000000) == 0b100000000
+      light_uv_failed: (bf &&& 0b100000000) == 0b100000000,
+      power_booster_depleted: (bf &&& 0x00008000) == 0x00008000,
+      power_booster_shore_power: (bf &&& 0x00010000) == 0x00010000,
     } 
   end
 
@@ -219,6 +221,7 @@ defmodule WeatherflowTempest.Protocol do
       0 -> "Radio Off"
       1 -> "Radio On"
       3 -> "Radio Active"
+      7 -> "BLE Connected"
     end
   end
 
