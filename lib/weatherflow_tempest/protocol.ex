@@ -1,15 +1,19 @@
 defmodule WeatherflowTempest.Protocol do
   @moduledoc """
-  The Weatherflow Protocol has a lot of magic fields. This parses and converts them to make the returned objects more intelligible.
+  The Weatherflow Protocol has a lot of magic fields. This parses and converts them
+  to make the returned objects more intelligible.
 
-  Byte-effecient arrays are unpacked into named fields based on the protocol docs published by Weathperflow.
+  Byte-effecient arrays are unpacked into named fields based on the protocol docs
+  published by Weathperflow.
 
   The following field standardizations are made to all event types:
     * "type" fields are removed.
     * "evt" fields containing the raw un-parsed event data are removed
-    * "uptime" fields containing seconds-of-uptime are converted to human readable uptime strings
+    * "uptime" fields containing seconds-as-integers are converted to human-readable
+      strings such as "1 week, 4 days, 3 hours, 16 minutes"
     * "timestamp" field containing the epoch time are converted to DateTime
-  All fields that are converted are named using atoms rather than strings, however fields that are not changed retain their string-based keys.
+  All fields that are converted are named using atoms rather than strings, however
+  fields that are not changed retain their string-based keys.
   """
 
   use Bitwise
@@ -20,7 +24,8 @@ defmodule WeatherflowTempest.Protocol do
   If the JSON could not be decoded bubble the error up to be handled by the client.
   Otherwise parse the event types defined by the Weatherflow spec.
 
-  Returns a tuple containing an atom matching the event "type" field, followed by the parsed object as a map.
+  Returns a tuple containing an atom matching the event "type" field, followed by
+  the parsed object as a map.
   """
   @spec handle_json({atom(), Map.t()}) :: Map.t()
   def handle_json({:error, %Jason.DecodeError{}} = arg) do
@@ -89,27 +94,30 @@ defmodule WeatherflowTempest.Protocol do
   end
 
   def handle_json({:ok, %{"type" => "device_status"} = obj}) do
-    {:device_status, obj
-                     |> Map.delete("type")
-                     |> Map.put(:sensor_status, parse_device_sensor_status(obj["sensor_status"]))
-                     |> Map.delete("sensor_status")
-                     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
-                     |> Map.delete("uptime")
-                     |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
-                     |> Map.delete("timestamp")}
+    {:device_status,
+     obj
+     |> Map.delete("type")
+     |> Map.put(:sensor_status, parse_device_sensor_status(obj["sensor_status"]))
+     |> Map.delete("sensor_status")
+     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
+     |> Map.delete("uptime")
+     |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
+     |> Map.delete("timestamp")}
   end
 
   def handle_json({:ok, %{"type" => "hub_status"} = obj}) do
-    {:hub_status, obj
-                  |> Map.delete("type")
-                  |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
-                  |> Map.delete("uptime")
-                  |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
-                  |> Map.delete("timestamp")
-                  |> Map.put(:radio_stats, parse_hub_radio_stats(obj["radio_stats"]))
-                  |> Map.delete("radio_stats")
-                  |> Map.put(:reset_flags, parse_hub_reset_flags(obj["reset_flags"]))
-                  |> Map.delete("reset_flags")}
+    {:hub_status,
+     obj
+     |> Map.put(:hub_sn, obj["serial_number"])
+     |> Map.delete("type")
+     |> Map.put(:uptime, uptime_seconds_to_string(obj["uptime"]))
+     |> Map.delete("uptime")
+     |> Map.put(:timestamp, DateTime.from_unix!(obj["timestamp"]))
+     |> Map.delete("timestamp")
+     |> Map.put(:radio_stats, parse_hub_radio_stats(obj["radio_stats"]))
+     |> Map.delete("radio_stats")
+     |> Map.put(:reset_flags, parse_hub_reset_flags(obj["reset_flags"]))
+     |> Map.delete("reset_flags")}
   end
 
 

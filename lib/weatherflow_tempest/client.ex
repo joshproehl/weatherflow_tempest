@@ -1,10 +1,12 @@
 defmodule WeatherflowTempest.Client do
   @moduledoc """
-  Listens for packets from Weatherflow devices on the LAN and stores their latest state/update in its own state.
+  Listens for packets from Weatherflow devices on the LAN and stores their latest
+  state/update in its own state.
 
   Outputs events via `WeatherflowTempest.PubSub.udp_event_broadcast/2`.
 
-  Events containing observations are flattened into a single observation with all observation keys as top-level keys.
+  Events containing observations are flattened into a single observation with all
+  observation keys as top-level keys.
   """
 
   use GenServer
@@ -70,6 +72,9 @@ defmodule WeatherflowTempest.Client do
 
   @doc """
   Get all the latest data that the client has received.
+
+  Returns a map where each key is a string for the hub serial, and the value is a
+  `%WeatherflowTempest.Client.Hub` struct.
   """
   def get_latest() do
     GenServer.call(__MODULE__, {:get_latest})
@@ -114,7 +119,9 @@ defmodule WeatherflowTempest.Client do
 
   @impl true
   def handle_call({:get_packet_stats}, _from, state) do
-    {:reply, %{packets_parsed: state.packets_parsed, packet_errors: state.packet_errors}, state}
+    {:reply,
+      %{packets_parsed: state.packets_parsed, packet_errors: state.packet_errors},
+      state}
   end
 
   @impl true

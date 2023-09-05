@@ -8,7 +8,8 @@ defmodule WeatherflowTempest.PubSub do
   ```
   or via one named :weatherflow_tempest if that is not defined.
   
-  Events are published as %Phoenix.Pubsub.broadcast{} structs with the "event" field being the event type from the Weatherflow API, and the parsed object as the payload.
+  Events are published as %Phoenix.Pubsub.broadcast{} structs with the "event" field
+  being the event type from the Weatherflow API, and the parsed object as the payload.
   UDP events received over the network are emitted over the "weatherflow:udp" topic.
   """
 
@@ -16,7 +17,8 @@ defmodule WeatherflowTempest.PubSub do
   @udp_event_topic "weatherflow:udp"
 
   @doc """
-  Subscribe to the correct pubsub name and channel to receive all UDP events as %Phoenix.PubSub.broadcast{} structs
+  Subscribe to the correct pubsub name and channel to receive all UDP events as
+  %Phoenix.PubSub.broadcast{} structs
   """
   def subscribe_udp_events(), do: Phoenix.PubSub.subscribe(@pubsub_name, @udp_event_topic)
 
