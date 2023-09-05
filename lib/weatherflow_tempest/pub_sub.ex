@@ -20,7 +20,7 @@ defmodule WeatherflowTempest.PubSub do
   Subscribe to the correct pubsub name and channel to receive all UDP events as
   %Phoenix.PubSub.broadcast{} structs
   """
-  def subscribe_udp_events(), do: Phoenix.PubSub.subscribe(@pubsub_name, @udp_event_topic)
+  def subscribe_to_udp_events(), do: Phoenix.PubSub.subscribe(@pubsub_name, @udp_event_topic)
 
   @doc false # this is designed to be called interally only.
   def udp_event_broadcast(event, payload) do
