@@ -13,7 +13,7 @@ defmodule WeatherflowTempest.PubSub do
   UDP events received over the network are emitted over the "weatherflow:udp" topic.
   """
 
-  @pubsub_name Application.get_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)
+  @pubsub_name Application.compile_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)
   @udp_event_topic "weatherflow:udp"
 
   @doc """
