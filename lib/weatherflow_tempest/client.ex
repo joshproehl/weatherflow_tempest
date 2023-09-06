@@ -101,7 +101,8 @@ defmodule WeatherflowTempest.Client do
 
   @impl true
   def init(:ok) do
-    {:ok, socket} = :gen_udp.open(50222, [:binary, broadcast: true, active: true])
+    {:ok, socket} = :gen_udp.open(Application.get_env(:weatherflow_tempest, :listen_port, 50222),
+                                  [:binary, broadcast: true, active: true])
     {:ok, %State{socket: socket}}
   end
 
