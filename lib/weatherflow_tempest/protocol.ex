@@ -129,6 +129,7 @@ defmodule WeatherflowTempest.Protocol do
       0 -> :none
       1 -> :rain
       2 -> :hail
+      3 -> :rain_plus_hail
     end
   end
 
