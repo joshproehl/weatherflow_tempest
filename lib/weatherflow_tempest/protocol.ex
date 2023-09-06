@@ -241,6 +241,7 @@ defmodule WeatherflowTempest.Protocol do
       "WDG" -> "Watchdog reset"
       "WWD" -> "Window watchdog reset"
       "LPW" -> "Low-power reset"
+      _ -> "Unknown reset flag"
     end
   end
 
