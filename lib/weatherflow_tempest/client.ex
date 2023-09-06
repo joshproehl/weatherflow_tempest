@@ -7,6 +7,19 @@ defmodule WeatherflowTempest.Client do
 
   Events containing observations are flattened into a single observation with all
   observation keys as top-level keys.
+
+  For observations, we'll get a list of observations. Sometimes.
+  It's unclear when the devices will actually do this, and in testing
+  with live devices it hasn't actually been observed.
+  However, to accomodate the case that it might happen what we'll do is
+  iterate the list, emitting a PubSub broadcast for **each** unique
+  observation, but only saving the most recent into the state.
+  (Since the Protocol handler is responsible for sorting by ascending
+  timestamp we will assume that the last item in the list is the most
+  recent observation.)
+  
+  This will allow any other module taking advantage of the PubSub
+  broadcasts to get complete data.
   """
 
   use GenServer
@@ -151,13 +164,10 @@ defmodule WeatherflowTempest.Client do
   end
 
   defp update_state({:rapid_wind, obj}, state) do
-    flattened_obj = obj
-                    |> Map.delete(:observation)
-                    |> Map.merge(obj.observation)
-    WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, flattened_obj)
+    WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, obj)
     {:noreply, state
-               |> put_in([:hubs, obj["hub_sn"], :rapid_wind], flattened_obj)
                |> ensure_hub_sn_key_in_state(obj)
+               |> put_in([:hubs, obj["hub_sn"], :rapid_wind], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
