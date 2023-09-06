@@ -164,10 +164,10 @@ defmodule WeatherflowTempest.Client do
   defp update_state({:obs_air, obj}, state) do
     base_obj = Map.delete(obj, :observations)
 
-    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_air, merged_obj)
-      collector = merged_obj
+      merged_obj
     end)
 
     {:noreply, state
@@ -179,10 +179,10 @@ defmodule WeatherflowTempest.Client do
   defp update_state({:obs_sky, obj}, state) do
     base_obj = Map.delete(obj, :observations)
 
-    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_sky, merged_obj)
-      collector = merged_obj
+      merged_obj
     end)
 
     {:noreply, state
@@ -194,10 +194,10 @@ defmodule WeatherflowTempest.Client do
   defp update_state({:obs_st, obj}, state) do
     base_obj = Map.delete(obj, :observations)
 
-    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, collector) ->
+    last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_tempest, merged_obj)
-      collector = merged_obj
+      merged_obj
     end)
 
     {:noreply, state
