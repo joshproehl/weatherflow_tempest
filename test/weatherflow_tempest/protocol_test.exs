@@ -1,6 +1,7 @@
 defmodule WeatherflowTempest.ProtocolTest do
   use ExUnit.Case, async: true
   alias WeatherflowTempest.Protocol
+  alias WeatherflowTempest.JSONFixtures, as: F
 
   test "bubbles up the error tuple from Jason.decode when given malformed JSON" do
     assert {:error, %Jason.DecodeError{} = _err}
@@ -8,61 +9,37 @@ defmodule WeatherflowTempest.ProtocolTest do
   end
 
   describe "handling a evt_precip message" do
-    setup do
-      [good_message: """
-        {
-            "serial_number": "SK-00008453",
-            "type":"evt_precip",
-            "hub_sn": "HB-00000001",
-            "evt":[1493322445]
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:evt_precip, _} = Protocol.handle_json(Jason.decode(F.example_evt_precip))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:evt_precip, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:evt_precip, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:evt_precip, res} = Protocol.handle_json(Jason.decode(F.example_evt_precip))
       assert Enum.count(res) == 3
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
       assert %{timestamp: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:evt_precip, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:evt_precip, res} = Protocol.handle_json(Jason.decode(F.example_evt_precip))
       assert res.serial_number == "SK-00008453"
       assert res.hub_sn == "HB-00000001"
     end
 
-    test "returns timestamp as a parsed DateTime", %{good_message: msg} do
-      {:evt_precip, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns timestamp as a parsed DateTime" do
+      {:evt_precip, res} = Protocol.handle_json(Jason.decode(F.example_evt_precip))
       assert res.timestamp == ~U[2017-04-27 19:47:25Z]
     end
   end
 
   describe "handling a evt_strike message" do
-    setup do
-      [good_message: """
-        {
-          "serial_number": "AR-00004049",
-          "type":"evt_strike",
-          "hub_sn": "HB-00000001",
-          "evt":[1493322445,27,3848]
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:evt_strike, _} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:evt_strike, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:evt_strike, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:evt_strike, res} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
       assert Enum.count(res) == 5
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -71,43 +48,31 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{energy: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:evt_strike, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:evt_strike, res} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
       assert res.serial_number == "AR-00004049"
       assert res.hub_sn == "HB-00000001"
     end
 
-    test "returns timestamp as a parsed DateTime", %{good_message: msg} do
-      {:evt_strike, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns timestamp as a parsed DateTime" do
+      {:evt_strike, res} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
       assert res.timestamp == ~U[2017-04-27 19:47:25Z]
     end
 
-    test "returns the message specific values", %{good_message: msg} do
-      {:evt_strike, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns the message specific values" do
+      {:evt_strike, res} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
       assert res.distance_km == 27
       assert res.energy == 3848
     end
   end
     
   describe "handling a rapid_wind message" do
-    setup do
-      [good_message: """
-        {
-          "serial_number": "SK-00008453",
-          "type":"rapid_wind",
-          "hub_sn": "HB-00000001",
-          "ob":[1493322445,2.3,128]
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:rapid_wind, _} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:rapid_wind, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
       assert Enum.count(res) == 5
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -116,58 +81,31 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{wind_direction_degrees: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
       assert res.serial_number == "SK-00008453"
       assert res.hub_sn == "HB-00000001"
     end
 
-    test "returns timestamp as a parsed DateTime", %{good_message: msg} do
-      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns timestamp as a parsed DateTime" do
+      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
       assert res.timestamp == ~U[2017-04-27 19:47:25Z]
     end
 
-    test "returns the message specific values", %{good_message: msg} do
-      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns the message specific values" do
+      {:rapid_wind, res} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
       assert res.wind_speed_mps == 2.3
       assert res.wind_direction_degrees == 128
     end
   end
 
   describe "handling a obs_air message" do
-    setup do
-      [good_message: """
-        {
-          "serial_number": "AR-00004049",
-          "type":"obs_air",
-          "hub_sn": "HB-00000001",
-          "obs":[[1493164835,835.0,10.0,45,0,0,3.46,1]],
-          "firmware_revision": 17
-        }
-        """,
-        # Note that the obs are newest-first, to test if they get
-        # re-sorted into ascending order correctly
-        double_obs_message: """
-        {
-          "serial_number": "AR-00004049",
-          "type":"obs_air",
-          "hub_sn": "HB-00000001",
-          "obs":[
-            [1493164865,836.0,11.0,46,1,6,3.45,1],
-            [1493164835,835.0,10.0,45,0,0,3.46,1]
-          ],
-          "firmware_revision": 17
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:obs_air, _} = Protocol.handle_json(Jason.decode(F.example_obs_air))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:obs_air, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:obs_air, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:obs_air, res} = Protocol.handle_json(Jason.decode(F.example_obs_air))
       assert Enum.count(res) == 4
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -175,15 +113,15 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{firmware_revision: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:obs_air, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:obs_air, res} = Protocol.handle_json(Jason.decode(F.example_obs_air))
       assert res.serial_number == "AR-00004049"
       assert res.hub_sn == "HB-00000001"
       assert res.firmware_revision == 17
     end
 
-    test "returns values from an observation correctly", %{good_message: msg} do
-      {:obs_air, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values from an observation correctly" do
+      {:obs_air, res} = Protocol.handle_json(Jason.decode(F.example_obs_air))
       ob1 = Enum.at(res.observations, 0)
       assert ob1.timestamp == ~U[2017-04-26 00:00:35Z]
       assert ob1.station_pressure_MB == 835.0
@@ -195,8 +133,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert ob1.reportinterval_minutes == 1
     end
 
-    test "returns multiple observations, and sorts by ascending timestamp", %{double_obs_message: msg} do
-      {:obs_air, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns multiple observations, and sorts by ascending timestamp" do
+      {:obs_air, res} = Protocol.handle_json(Jason.decode(F.obs_air_with_two_observations))
       assert Enum.count(res.observations) == 2
       ob1 = Enum.at(res.observations, 0)
       ob2 = Enum.at(res.observations, 1)
@@ -210,42 +148,12 @@ defmodule WeatherflowTempest.ProtocolTest do
   end
 
   describe "handling a obs_sky message" do
-    setup do
-      [good_message: """
-        {
-          "serial_number": "SK-00008453",
-          "type":"obs_sky",
-          "hub_sn": "HB-00000001",
-          "obs":[[1493321340,9000,10,0.0,2.6,4.6,7.4,187,3.12,1,130,null,0,3]],
-          "firmware_revision": 29
-        }
-        """,
-        # Note that obs are in not in epoch order, in order to test sorting.
-        # We're also using this message to test parsing of the precip_type,
-        # so each type is represented
-        multi_obs_message: """
-        {
-          "serial_number": "SK-00008453",
-          "type":"obs_sky",
-          "hub_sn": "HB-00000001",
-          "obs":[
-            [1493321340,9000,10,0.0,2.6,4.6,7.4,187,3.12,1,130,null,2,3],
-            [1493321370,8000,9,0.5,2.5,4.5,7.3,186,3.10,1,125,1,3,3],
-            [1493321310,8000,9,0.5,2.5,4.5,7.3,186,3.10,1,125,1,1,3],
-            [1493321280,8000,9,0.5,2.5,4.5,7.3,186,3.10,1,125,1,0,3]
-          ],
-          "firmware_revision": 29
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:obs_sky, _} = Protocol.handle_json(Jason.decode(F.example_obs_sky))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:obs_sky, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:obs_sky, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:obs_sky, res} = Protocol.handle_json(Jason.decode(F.example_obs_sky))
       assert Enum.count(res) == 4
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -253,15 +161,15 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{firmware_revision: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:obs_sky, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:obs_sky, res} = Protocol.handle_json(Jason.decode(F.example_obs_sky))
       assert res.serial_number == "SK-00008453"
       assert res.hub_sn == "HB-00000001"
       assert res.firmware_revision == 29
     end
 
-    test "returns values from an observation correctly", %{good_message: msg} do
-      {:obs_sky, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values from an observation correctly" do
+      {:obs_sky, res} = Protocol.handle_json(Jason.decode(F.example_obs_sky))
       ob1 = Enum.at(res.observations, 0)
       assert ob1.timestamp == ~U[2017-04-27 19:29:00Z]
       assert ob1.illuminance_lux == 9000
@@ -279,8 +187,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert ob1.wind_sample_interval_seconds == 3
     end
 
-    test "returns multiple observations, and sorts by ascending timestamp", %{multi_obs_message: msg} do
-      {:obs_sky, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns multiple observations, and sorts by ascending timestamp" do
+      {:obs_sky, res} = Protocol.handle_json(Jason.decode(F.obs_sky_with_multiple_observations))
       assert Enum.count(res.observations) == 4
       ob1 = Enum.at(res.observations, 0)
       ob2 = Enum.at(res.observations, 1)
@@ -295,8 +203,8 @@ defmodule WeatherflowTempest.ProtocolTest do
     # Note that this test depends on the observations being sorted in
     # ascending timestamp order, which is checked by the previous test.
     # However if we were ever to change that sort order this would break.
-    test "returns different precip types correctly", %{multi_obs_message: msg} do
-      {:obs_sky, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns different precip types correctly" do
+      {:obs_sky, res} = Protocol.handle_json(Jason.decode(F.obs_sky_with_multiple_observations))
       assert Enum.count(res.observations) == 4
       ob1 = Enum.at(res.observations, 0)
       ob2 = Enum.at(res.observations, 1)
@@ -310,44 +218,12 @@ defmodule WeatherflowTempest.ProtocolTest do
   end
 
   describe "handling a obs_st message" do
-    setup do
-      [good_message: """
-        {
-          "serial_number": "ST-00000512",
-          "type": "obs_st",
-          "hub_sn": "HB-00013030",
-          "obs": [
-              [1588948614,0.18,0.22,0.27,144,6,1017.57,22.37,50.26,328,0.03,3,0.000000,0,0,0,2.410,1]
-          ],
-          "firmware_revision": 129
-        }
-        """,
-        # Note that obs are in not in epoch order, in order to test sorting.
-        # We're also using this message to test parsing of the precip_type,
-        # so each type is represented
-        multi_obs_message: """
-        {
-          "serial_number": "ST-00000512",
-          "type": "obs_st",
-          "hub_sn": "HB-00013030",
-          "obs": [
-              [1588948674,0.18,0.22,0.27,144,6,1017.57,22.37,50.26,328,0.03,3,0.000000,3,0,0,2.410,1],
-              [1588948614,0.18,0.22,0.27,144,6,1017.57,22.37,50.26,328,0.03,3,0.000000,1,0,0,2.410,1],
-              [1588948644,0.18,0.22,0.27,144,6,1017.57,22.37,50.26,328,0.03,3,0.000000,2,0,0,2.410,1],
-              [1588948584,0.18,0.22,0.27,144,6,1017.57,22.37,50.26,328,0.03,3,0.000000,0,0,0,2.410,1]
-          ],
-          "firmware_revision": 129
-        }
-        """,
-      ]
+    test "returns the correct type as the first tuple element" do
+      assert {:obs_st, _} = Protocol.handle_json(Jason.decode(F.example_obs_st))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:obs_st, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:obs_st, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:obs_st, res} = Protocol.handle_json(Jason.decode(F.example_obs_st))
       assert Enum.count(res) == 4
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -355,15 +231,15 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{firmware_revision: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:obs_st, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:obs_st, res} = Protocol.handle_json(Jason.decode(F.example_obs_st))
       assert res.serial_number == "ST-00000512"
       assert res.hub_sn == "HB-00013030"
       assert res.firmware_revision == 129
     end
 
-    test "returns values from an observation correctly", %{good_message: msg} do
-      {:obs_st, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values from an observation correctly" do
+      {:obs_st, res} = Protocol.handle_json(Jason.decode(F.example_obs_st))
       ob1 = Enum.at(res.observations, 0)
       assert ob1.timestamp == ~U[2020-05-08 14:36:54Z]
       assert ob1.wind_lull_ms == 0.18
@@ -385,8 +261,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert ob1.reportinterval_minutes == 1
     end
 
-    test "returns multiple observations, and sorts by ascending timestamp", %{multi_obs_message: msg} do
-      {:obs_st, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns multiple observations, and sorts by ascending timestamp" do
+      {:obs_st, res} = Protocol.handle_json(Jason.decode(F.obs_st_with_multiple_observations))
       assert Enum.count(res.observations) == 4
       ob1 = Enum.at(res.observations, 0)
       ob2 = Enum.at(res.observations, 1)
@@ -401,8 +277,8 @@ defmodule WeatherflowTempest.ProtocolTest do
     # Note that this test depends on the observations being sorted in
     # ascending timestamp order, which is checked by the previous test.
     # However if we were ever to change that sort order this would break.
-    test "returns different precip types correctly", %{multi_obs_message: msg} do
-      {:obs_st, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns different precip types correctly" do
+      {:obs_st, res} = Protocol.handle_json(Jason.decode(F.obs_st_with_multiple_observations))
       assert Enum.count(res.observations) == 4
       ob1 = Enum.at(res.observations, 0)
       ob2 = Enum.at(res.observations, 1)
@@ -416,16 +292,12 @@ defmodule WeatherflowTempest.ProtocolTest do
   end
 
   describe "handling a device_status message" do
-    setup do
-      [good_message: build_device_status()]
+    test "returns the correct type as the first tuple element" do
+      assert {:device_status, _} = Protocol.handle_json(Jason.decode(F.example_device_status))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:device_status, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:device_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:device_status, res} = Protocol.handle_json(Jason.decode(F.example_device_status))
       assert Enum.count(res) == 11
       assert %{serial_number: _} = res
       assert %{hub_sn: _} = res
@@ -440,8 +312,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{debug: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:device_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:device_status, res} = Protocol.handle_json(Jason.decode(F.example_device_status))
       assert res.serial_number == "AR-00004049"
       assert res.hub_sn == "HB-00000001"
       assert res.uptime == 2189
@@ -451,8 +323,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert res.hub_rssi == -87
     end
 
-    test "returns timestamp as a parsed DateTime", %{good_message: msg} do
-      {:device_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns timestamp as a parsed DateTime" do
+      {:device_status, res} = Protocol.handle_json(Jason.decode(F.example_device_status))
       assert res.timestamp == ~U[2017-11-16 18:12:03Z]
     end
 
@@ -460,8 +332,8 @@ defmodule WeatherflowTempest.ProtocolTest do
     # `Timex.format_duration/2` function.
     # It would be better to perhaps regex this to make sure it contained
     # certain elements? Maybe just testing that it's a non-empty string?
-    test "returns uptime_string as human readable text", %{good_message: msg} do
-      {:device_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns uptime_string as human readable text" do
+      {:device_status, res} = Protocol.handle_json(Jason.decode(F.example_device_status))
       assert res.uptime_string == "36 minutes, 29 seconds"
     end
 
@@ -483,7 +355,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(0)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(0)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -499,7 +371,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(1)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(1)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -515,7 +387,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(2)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(2)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -531,7 +403,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(4)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(4)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -547,7 +419,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(8)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(8)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -563,7 +435,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(16)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(16)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -579,7 +451,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(32)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(32)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -595,7 +467,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(64)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(64)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -611,7 +483,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(128)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(128)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -627,7 +499,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: true,
                     power_booster_depleted: false,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(256)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(256)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -643,7 +515,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: true,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(32768)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(32768)))
 
       assert {:device_status,
                 %{sensor_status: %{
@@ -659,7 +531,7 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: false,
                     power_booster_depleted: false,
                     power_booster_shore_power: true,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(65536)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(65536)))
 
       # Now we've tested every individual field, so let's test a combination
       assert {:device_status,
@@ -676,21 +548,17 @@ defmodule WeatherflowTempest.ProtocolTest do
                     light_uv_failed: true,
                     power_booster_depleted: true,
                     power_booster_shore_power: false,
-              }}} = Protocol.handle_json(Jason.decode(build_device_status(1+32+256+32768)))
+              }}} = Protocol.handle_json(Jason.decode(F.device_status_with_sensor_status(1+32+256+32768)))
     end
   end
 
   describe "handling a hub_status message" do
-    setup do
-      [good_message: build_hub_status()]
+    test "returns the correct type as the first tuple element" do
+      assert {:hub_status, _} = Protocol.handle_json(Jason.decode(F.example_hub_status))
     end
 
-    test "returns the correct type as the first tuple element", %{good_message: msg} do
-      assert {:hub_status, _} = Protocol.handle_json(Jason.decode(msg))
-    end
-
-    test "returns object with the expected keys", %{good_message: msg} do
-      {:hub_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns object with the expected keys" do
+      {:hub_status, res} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       assert Enum.count(res) == 12
       assert %{hub_sn: _} = res
       assert %{serial_number: _} = res
@@ -706,8 +574,8 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert %{mqtt_stats: _} = res
     end
 
-    test "returns values that should remain unchanged in expected formats", %{good_message: msg} do
-      {:hub_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns values that should remain unchanged in expected formats" do
+      {:hub_status, res} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       assert res.serial_number == "HB-00000001"
       assert res.firmware_revision == "35"
       assert res.uptime == 1670133
@@ -717,13 +585,13 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert res.mqtt_stats == :not_parsed__internal_use_only
     end
 
-    test "returns timestamp as a parsed DateTime", %{good_message: msg} do
-      {:hub_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns timestamp as a parsed DateTime" do
+      {:hub_status, res} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       assert res.timestamp == ~U[2017-05-25 15:04:51Z]
     end
 
-    test "copies the serial_number field into the hub_sn field", %{good_message: msg} do
-      {:hub_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "copies the serial_number field into the hub_sn field" do
+      {:hub_status, res} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       assert res.hub_sn == res.serial_number
     end
     #
@@ -731,8 +599,8 @@ defmodule WeatherflowTempest.ProtocolTest do
     # `Timex.format_duration/2` function.
     # It would be better to perhaps regex this to make sure it contained
     # certain elements? Maybe just testing that it's a non-empty string?
-    test "returns uptime_string as human readable text", %{good_message: msg} do
-      {:hub_status, res} = Protocol.handle_json(Jason.decode(msg))
+    test "returns uptime_string as human readable text" do
+      {:hub_status, res} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       assert res.uptime_string == "2 weeks, 5 days, 7 hours, 55 minutes, 33 seconds"
     end
 
@@ -744,22 +612,22 @@ defmodule WeatherflowTempest.ProtocolTest do
                   i2c_bus_error_count: 0,
                   radio_status: "Radio Active",
                   radio_network_id: 2839
-             }}} = Protocol.handle_json(Jason.decode(build_hub_status(nil, 3)))
+             }}} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("", 3)))
 
       assert {:hub_status,
               %{radio_stats:
                 %{radio_status: "Radio Off",
-             }}} = Protocol.handle_json(Jason.decode(build_hub_status(nil, 0)))
+             }}} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("", 0)))
 
       assert {:hub_status,
               %{radio_stats:
                 %{radio_status: "Radio On",
-             }}} = Protocol.handle_json(Jason.decode(build_hub_status(nil, 1)))
+             }}} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("", 1)))
 
       assert {:hub_status,
               %{radio_stats:
                 %{radio_status: "BLE Connected",
-             }}} = Protocol.handle_json(Jason.decode(build_hub_status(nil, 7)))
+             }}} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("", 7)))
     end
 
     test "returns an array of human-readable flags for reset flags field" do
@@ -772,54 +640,13 @@ defmodule WeatherflowTempest.ProtocolTest do
                 "Watchdog reset",
                 "Window watchdog reset",
                 "Low-power reset"
-             ]}} = Protocol.handle_json(Jason.decode(build_hub_status("BOR,PIN,POR,SFT,WDG,WWD,LPW")))
+             ]}} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("BOR,PIN,POR,SFT,WDG,WWD,LPW")))
     end
 
     test "reset flags field handles unexpected flag" do
       assert {:hub_status,
               %{reset_flags: ["Brownout reset","Unknown reset flag"]
-             }} = Protocol.handle_json(Jason.decode(build_hub_status("BOR,BRF")))
+             }} = Protocol.handle_json(Jason.decode(F.hub_status_with_reset_flags_and_radio_status("BOR,BRF")))
     end
-  end
-
-
-  #####
-  # Helper functions
-  #####
-  
-  defp build_device_status(sensor_status \\ 0) do
-    """
-    {
-      "serial_number": "AR-00004049",
-      "type": "device_status",
-      "hub_sn": "HB-00000001",
-      "timestamp": 1510855923,
-      "uptime": 2189,
-      "voltage": 3.50,
-      "firmware_revision": 17,
-      "rssi": -17,
-      "hub_rssi": -87,
-      "sensor_status": #{sensor_status},
-      "debug": 0
-    }
-    """
-  end
-
-  defp build_hub_status(reset_flags \\ "BOR,PIN,POR", radio_status \\ 3) do
-    """
-    {
-      "serial_number":"HB-00000001",
-      "type":"hub_status",
-      "firmware_revision":"35",
-      "uptime":1670133,
-      "rssi":-62,
-      "timestamp":1495724691,
-      "reset_flags": \"#{reset_flags}\",
-      "seq": 48,
-      "fs": [1, 0, 15675411, 524288],
-      "radio_stats": [2, 1, 0, #{radio_status}, 2839],
-      "mqtt_stats": [1, 0]
-    }
-    """
   end
 end
