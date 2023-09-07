@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 # For testing we'll use a random ephemeral port to "listen" on,
 # which will work fine since we won't actually be doing any listening.
