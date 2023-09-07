@@ -7,10 +7,13 @@ defmodule WeatherflowTempest.PubSub do
   config :weatherflow_tempest, :pubsub_name, MyApp.PubSub
   ```
   or via one named :weatherflow_tempest if that is not defined.
+
+  UDP events received over the network are emitted via the "weatherflow:udp"
+  topic.
   
-  Events are published as %Phoenix.Pubsub.broadcast{} structs with the "event" field
-  being the event type from the Weatherflow API, and the parsed object as the payload.
-  UDP events received over the network are emitted over the "weatherflow:udp" topic.
+  Events are published as an {event, payload} struct, with the event being an
+  expanded version of the event type from the weatherflow API, and the parsed
+  object as the payload.
   """
 
   @pubsub_name Application.compile_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)
@@ -22,9 +25,9 @@ defmodule WeatherflowTempest.PubSub do
   """
   def subscribe_to_udp_events(), do: Phoenix.PubSub.subscribe(@pubsub_name, @udp_event_topic)
 
-  @doc false # this is designed to be called interally only.
+  @doc false # this is designed to be called interally only by the the Client module
   def udp_event_broadcast(event, payload) do
-    t_broadcast(@udp_event_topic, event, payload)
+    Phoenix.PubSub.broadcast(@pubsub_name, @udp_event_topic, {event, payload})
   end
 
   @doc """
@@ -32,13 +35,4 @@ defmodule WeatherflowTempest.PubSub do
   """
   def get_pubsub_name(), do: @pubsub_name
 
-  defp t_broadcast(topic, event, payload) do
-    Phoenix.PubSub.broadcast(@pubsub_name, topic, %{
-      __struct__: Phoenix.Socket.Broadcast,
-      topic: topic,
-      event: event,
-      payload: payload
-    },
-    Phoenix.Channel.Server)
-  end
 end
