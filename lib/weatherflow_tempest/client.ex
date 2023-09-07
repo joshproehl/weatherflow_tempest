@@ -25,7 +25,6 @@ defmodule WeatherflowTempest.Client do
   use GenServer
   alias WeatherflowTempest.Protocol
 
-
   defmodule State do
     @moduledoc false
     @type t :: %__MODULE__{
@@ -79,7 +78,7 @@ defmodule WeatherflowTempest.Client do
   # Client
 
   @doc false
-  def start_link(_opts) do
+  def start_link(_opts \\ %{}) do
     GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
@@ -151,7 +150,7 @@ defmodule WeatherflowTempest.Client do
     WeatherflowTempest.PubSub.udp_event_broadcast(:event_precipitation, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :event_precipitation], obj)
+               |> put_in([:hubs, obj.hub_sn, :event_precipitation], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -159,7 +158,7 @@ defmodule WeatherflowTempest.Client do
     WeatherflowTempest.PubSub.udp_event_broadcast(:event_strike, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :event_strike], obj)
+               |> put_in([:hubs, obj.hub_sn, :event_strike], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -167,7 +166,7 @@ defmodule WeatherflowTempest.Client do
     WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :rapid_wind], obj)
+               |> put_in([:hubs, obj.hub_sn, :rapid_wind], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -182,7 +181,7 @@ defmodule WeatherflowTempest.Client do
 
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_air], last_obs_obj)
+               |> put_in([:hubs, obj.hub_sn, :observation_air], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -197,7 +196,7 @@ defmodule WeatherflowTempest.Client do
 
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_sky], last_obs_obj)
+               |> put_in([:hubs, obj.hub_sn, :observation_sky], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -212,7 +211,7 @@ defmodule WeatherflowTempest.Client do
 
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :observation_tempest], last_obs_obj)
+               |> put_in([:hubs, obj.hub_sn, :observation_tempest], last_obs_obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -220,7 +219,7 @@ defmodule WeatherflowTempest.Client do
     WeatherflowTempest.PubSub.udp_event_broadcast(:device_status, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["hub_sn"], :device_statuses, obj["serial_number"]], obj)
+               |> put_in([:hubs, obj.hub_sn, :device_statuses, obj.serial_number], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -228,7 +227,7 @@ defmodule WeatherflowTempest.Client do
     WeatherflowTempest.PubSub.udp_event_broadcast(:hub_status, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
-               |> put_in([:hubs, obj["serial_number"], :hub_status], obj)
+               |> put_in([:hubs, obj.serial_number, :hub_status], obj)
                |> Map.update(:packets_parsed, 0, &(&1 + 1))}
   end
 
@@ -240,7 +239,7 @@ defmodule WeatherflowTempest.Client do
 
   defp ensure_hub_sn_key_in_state(state, obj) do
     new_hubs = state.hubs
-               |> Map.put_new(obj["hub_sn"], %Hub{})
+               |> Map.put_new(obj.hub_sn, %Hub{})
     %{state | hubs: new_hubs}
   end
 
