@@ -5,12 +5,19 @@ defmodule WeatherflowTempest.Application do
 
   def start(_type, _agrs) do
     children = [
-      {WeatherflowTempest.Client, []},
     ]
+    ++ maybe_start_client()
     ++ maybe_start_pubsub()
 
     opts = [strategy: :one_for_one, name: WeatherflowTempest]
     Supervisor.start_link(children, opts)
+  end
+
+  defp maybe_start_client() do
+    case Mix.env() do
+      :test -> []
+      _ -> [{WeatherflowTempest.Client, []}]
+    end
   end
 
   defp maybe_start_pubsub() do
