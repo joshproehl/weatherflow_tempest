@@ -33,14 +33,14 @@ defmodule WeatherflowTempest.Client do
       packet_errors: integer(),
       last_error: map(),
       hubs: map(),
-      callback_func: function(),
+      callback_funcs: [function()],
     }
     defstruct socket: nil,
               packets_parsed: 0,
               packet_errors: 0,
               last_error: %{},
               hubs: %{},
-              callback_func: nil
+              callback_funcs: []
     
     # Delegate Access behaviour so we can use put_in to deeply-nested update hub info
     defdelegate fetch(term, key), to: Map
@@ -79,7 +79,7 @@ defmodule WeatherflowTempest.Client do
   # Client
 
   @doc false
-  def start_link(opts \\ %{callback_func: nil}) do
+  def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
@@ -122,7 +122,7 @@ defmodule WeatherflowTempest.Client do
     {:ok,
       %State{
         socket: socket,
-        callback_func: opts.callback_func,
+        callback_funcs: Keyword.get_values(opts, :callback_func)
       }
     }
   end
@@ -165,7 +165,7 @@ defmodule WeatherflowTempest.Client do
   
   defp update_state({:evt_precip, obj}, state) do
     WeatherflowTempest.PubSub.udp_event_broadcast(:event_precipitation, obj)
-    maybe_do_callback(state.callback_func, :event_precipitation, obj)
+    maybe_do_callbacks(state.callback_funcs, :event_precipitation, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
                |> put_in([:hubs, obj.hub_sn, :event_precipitation], obj)
@@ -174,7 +174,7 @@ defmodule WeatherflowTempest.Client do
 
   defp update_state({:evt_strike, obj}, state) do
     WeatherflowTempest.PubSub.udp_event_broadcast(:event_strike, obj)
-    maybe_do_callback(state.callback_func, :event_strike, obj)
+    maybe_do_callbacks(state.callback_funcs, :event_strike, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
                |> put_in([:hubs, obj.hub_sn, :event_strike], obj)
@@ -183,7 +183,7 @@ defmodule WeatherflowTempest.Client do
 
   defp update_state({:rapid_wind, obj}, state) do
     WeatherflowTempest.PubSub.udp_event_broadcast(:rapid_wind, obj)
-    maybe_do_callback(state.callback_func, :rapid_wind, obj)
+    maybe_do_callbacks(state.callback_funcs, :rapid_wind, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
                |> put_in([:hubs, obj.hub_sn, :rapid_wind], obj)
@@ -196,7 +196,7 @@ defmodule WeatherflowTempest.Client do
     last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_air, merged_obj)
-      maybe_do_callback(state.callback_func, :observation_air, merged_obj)
+      maybe_do_callbacks(state.callback_funcs, :observation_air, merged_obj)
       merged_obj
     end)
 
@@ -212,7 +212,7 @@ defmodule WeatherflowTempest.Client do
     last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_sky, merged_obj)
-      maybe_do_callback(state.callback_func, :observation_sky, merged_obj)
+      maybe_do_callbacks(state.callback_funcs, :observation_sky, merged_obj)
       merged_obj
     end)
 
@@ -228,7 +228,7 @@ defmodule WeatherflowTempest.Client do
     last_obs_obj = Enum.reduce(obj.observations, nil, fn(obs, _acc) ->
       merged_obj = Map.merge(base_obj, obs)
       WeatherflowTempest.PubSub.udp_event_broadcast(:observation_tempest, merged_obj)
-      maybe_do_callback(state.callback_func, :observation_tempest, merged_obj)
+      maybe_do_callbacks(state.callback_funcs, :observation_tempest, merged_obj)
       merged_obj
     end)
 
@@ -240,7 +240,7 @@ defmodule WeatherflowTempest.Client do
 
   defp update_state({:device_status, obj}, state) do
     WeatherflowTempest.PubSub.udp_event_broadcast(:device_status, obj)
-    maybe_do_callback(state.callback_func, :device_status, obj)
+    maybe_do_callbacks(state.callback_funcs, :device_status, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
                |> put_in([:hubs, obj.hub_sn, :device_statuses, obj.serial_number], obj)
@@ -249,7 +249,7 @@ defmodule WeatherflowTempest.Client do
 
   defp update_state({:hub_status, obj}, state) do
     WeatherflowTempest.PubSub.udp_event_broadcast(:hub_status, obj)
-    maybe_do_callback(state.callback_func, :hub_status, obj)
+    maybe_do_callbacks(state.callback_funcs, :hub_status, obj)
     {:noreply, state
                |> ensure_hub_sn_key_in_state(obj)
                |> put_in([:hubs, obj.serial_number, :hub_status], obj)
@@ -262,11 +262,13 @@ defmodule WeatherflowTempest.Client do
                |> Map.update(:packet_errors, 0, &(&1 + 1))}
   end
 
-  # The state initalizes the callback as nil, so if the user doesn't
-  # explicitly pass in a function to start_link, then this will be a no-op.
-  defp maybe_do_callback(callback_func, event_type, event_obj) do
-    if callback_func do
-      callback_func.(event_type, event_obj)
+  # The state initalizes the callback as an empty list, so if the user doesn't
+  # explicitly pass in any functions to start_link, then this will be a no-op.
+  defp maybe_do_callbacks(callback_funcs, event_type, event_obj) do
+    if Enum.count(callback_funcs) > 0 do
+      Enum.each(callback_funcs, fn(callback_func) ->
+        if not is_nil(callback_func), do: callback_func.(event_type, event_obj)
+      end)
       :ok
     else
       :noop
