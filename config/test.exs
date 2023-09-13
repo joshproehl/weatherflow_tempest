@@ -5,3 +5,5 @@ import Config
 # This prevents collisions, either with async, or if we're developing
 # both the library and a client using it at the same time.
 config :weatherflow_tempest, listen_port: 0
+
+config :weatherflow_tempest, pubsub_name: WeatherflowTempestTest

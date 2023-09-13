@@ -16,7 +16,7 @@ defmodule WeatherflowTempest.PubSub do
   object as the payload.
   """
 
-  @pubsub_name Application.compile_env(:weatherflow_tempest, :pubsub_name, :weatherflow_tempest)
+  @pubsub_name Application.compile_env(:weatherflow_tempest, :pubsub_name)
   @udp_event_topic "weatherflow:udp"
 
   @doc """
@@ -25,14 +25,22 @@ defmodule WeatherflowTempest.PubSub do
   """
   def subscribe_to_udp_events(), do: Phoenix.PubSub.subscribe(@pubsub_name, @udp_event_topic)
 
-  @doc false # this is designed to be called interally only by the the Client module
-  def udp_event_broadcast(event, payload) do
-    Phoenix.PubSub.broadcast(@pubsub_name, @udp_event_topic, {event, payload})
-  end
-
   @doc """
   Return the name of the pubsub we're using
   """
   def get_pubsub_name(), do: @pubsub_name
 
+  @doc false
+  # This function is intended only to be called from the WeatherflowTempest.Client
+  # If the compile env doesn't define a pubsub_name then this function is a noop
+  def udp_event_broadcast(event, payload) do
+    if @pubsub_name do 
+      Phoenix.PubSub.broadcast(@pubsub_name,
+                               @udp_event_topic,
+                               {{:weatherflow, event}, payload})
+      :ok
+    else
+      :noop
+    end
+  end
 end

@@ -21,8 +21,8 @@ defmodule WeatherflowTempest.Application do
   end
 
   defp maybe_start_pubsub() do
-    case Application.get_env(:weatherflow_tempest, :pubsub_name) do
-      nil -> [{Phoenix.PubSub, [name: WeatherflowTempest.PubSub.get_pubsub_name()]}]
+    case Mix.env() do
+      :test -> [{Phoenix.PubSub, [name: Application.get_env(:weatherflow_tempest, :pubsub_name)]}]
       _ -> []
     end
   end

@@ -64,7 +64,7 @@ defmodule WeatherflowTempest.ClientTest do
                                 hub_sn: e.hub_sn,
                                 timestamp: e.timestamp,
               }}}} == new_state
-      assert_receive {:event_precipitation, pubsub_obj}
+      assert_receive {{:weatherflow, :event_precipitation}, pubsub_obj}
       assert pubsub_obj == e
     end
     test "evt_strike" do
@@ -82,7 +82,7 @@ defmodule WeatherflowTempest.ClientTest do
                                 distance_km: e.distance_km,
                                 energy: e.energy,
               }}}} == new_state
-      assert_receive {:event_strike, pubsub_obj}
+      assert_receive {{:weatherflow, :event_strike}, pubsub_obj}
       assert pubsub_obj == e
     end
     test "rapid_wind" do
@@ -100,7 +100,7 @@ defmodule WeatherflowTempest.ClientTest do
                                 wind_speed_mps: e.wind_speed_mps,
                                 wind_direction_degrees: e.wind_direction_degrees,
               }}}} == new_state
-      assert_receive {:rapid_wind, pubsub_obj}
+      assert_receive {{:weatherflow, :rapid_wind}, pubsub_obj}
       assert pubsub_obj == e
     end
     test "obs_air" do
@@ -121,14 +121,14 @@ defmodule WeatherflowTempest.ClientTest do
       expected_flattened_obj = e
                                |> Map.delete(:observations)
                                |> Map.merge(Enum.at(e.observations, 0))
-      assert_receive {:observation_air, pubsub_obj}
+      assert_receive {{:weatherflow, :observation_air}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
     end
     test "obs_air with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:noreply, new_state} = mock_receive_message(F.obs_air_with_two_observations)
-      assert_next_receive {:observation_air, %{timestamp: ~U[2017-04-26 00:00:35Z]}}
-      assert_next_receive {:observation_air, %{timestamp: ~U[2017-04-26 00:01:05Z]}}
+      assert_next_receive {{:weatherflow, :observation_air}, %{timestamp: ~U[2017-04-26 00:00:35Z]}}
+      assert_next_receive {{:weatherflow, :observation_air}, %{timestamp: ~U[2017-04-26 00:01:05Z]}}
       # assert that the most recent observation is in the state
       assert %State{
                 packets_parsed: 1,
@@ -155,16 +155,16 @@ defmodule WeatherflowTempest.ClientTest do
       expected_flattened_obj = e
                                |> Map.delete(:observations)
                                |> Map.merge(Enum.at(e.observations, 0))
-      assert_receive {:observation_sky, pubsub_obj}
+      assert_receive {{:weatherflow, :observation_sky}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
     end
     test "obs_sky with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:noreply, new_state} = mock_receive_message(F.obs_sky_with_multiple_observations)
-      assert_next_receive {:observation_sky, %{timestamp: ~U[2017-04-27 19:28:00Z]}}
-      assert_next_receive {:observation_sky, %{timestamp: ~U[2017-04-27 19:28:30Z]}}
-      assert_next_receive {:observation_sky, %{timestamp: ~U[2017-04-27 19:29:00Z]}}
-      assert_next_receive {:observation_sky, %{timestamp: ~U[2017-04-27 19:29:30Z]}}
+      assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:28:00Z]}}
+      assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:28:30Z]}}
+      assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:29:00Z]}}
+      assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:29:30Z]}}
       # assert that the most recent observation is in the state
       assert %State{
                 packets_parsed: 1,
@@ -191,16 +191,16 @@ defmodule WeatherflowTempest.ClientTest do
       expected_flattened_obj = e
                                |> Map.delete(:observations)
                                |> Map.merge(Enum.at(e.observations, 0))
-      assert_receive {:observation_tempest, pubsub_obj}
+      assert_receive {{:weatherflow, :observation_tempest}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
     end
     test "obs_st with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:noreply, new_state} = mock_receive_message(F.obs_st_with_multiple_observations)
-      assert_next_receive {:observation_tempest, %{timestamp: ~U[2020-05-08 14:36:24Z]}}
-      assert_next_receive {:observation_tempest, %{timestamp: ~U[2020-05-08 14:36:54Z]}}
-      assert_next_receive {:observation_tempest, %{timestamp: ~U[2020-05-08 14:37:24Z]}}
-      assert_next_receive {:observation_tempest, %{timestamp: ~U[2020-05-08 14:37:54Z]}}
+      assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:36:24Z]}}
+      assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:36:54Z]}}
+      assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:37:24Z]}}
+      assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:37:54Z]}}
       # assert that the most recent observation is in the state
       assert %State{
                 packets_parsed: 1,
@@ -231,7 +231,7 @@ defmodule WeatherflowTempest.ClientTest do
                         sensor_status: e.sensor_status,
                         debug: e.debug,
               }}}}} == new_state
-      assert_receive {:device_status, pubsub_obj}
+      assert_receive {{:weatherflow, :device_status}, pubsub_obj}
       assert pubsub_obj == e
     end
     test "hub_status" do
@@ -256,7 +256,7 @@ defmodule WeatherflowTempest.ClientTest do
                         radio_stats: e.radio_stats,
                         mqtt_stats: e.mqtt_stats,
               }}}} == new_state
-      assert_receive {:hub_status, pubsub_obj}
+      assert_receive {{:weatherflow, :hub_status}, pubsub_obj}
       assert pubsub_obj == e
     end
   end
