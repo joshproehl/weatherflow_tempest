@@ -90,7 +90,7 @@ defmodule WeatherflowTempest.Protocol do
   so if you'd like to actually deal with a device that is sending lists of
   observations you'll need to use `WeatherflowTempest.Protocol` directly.
   """
-  @spec handle_json({atom(), Map.t()}) :: Map.t()
+  @spec handle_json({atom(), map()}) :: map()
   def handle_json({:error, %Jason.DecodeError{}} = error_tuple), do: error_tuple
 
   def handle_json({:ok, %{"type" => "evt_precip"} = obj}) do

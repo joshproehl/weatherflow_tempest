@@ -51,14 +51,14 @@ defmodule WeatherflowTempest.Client do
   defmodule Hub do
     @moduledoc false
     @type t :: %__MODULE__{
-      event_precipitation: Map.t(),
-      event_strike: Map.t(),
-      rapid_wind: Map.t(),
-      observation_air: Map.t(),
-      observation_sky: Map.t(),
-      observation_tempest: Map.t(),
-      device_statuses: Map.t(),
-      hub_status: Map.t()
+      event_precipitation: map(),
+      event_strike: map(),
+      rapid_wind: map(),
+      observation_air: map(),
+      observation_sky: map(),
+      observation_tempest: map(),
+      device_statuses: map(),
+      hub_status: map()
     }
     defstruct event_precipitation: %{},
               event_strike: %{},
@@ -89,6 +89,7 @@ defmodule WeatherflowTempest.Client do
   Returns a map where each key is a string for the hub serial, and the value is a
   `%WeatherflowTempest.Client.Hub` struct.
   """
+  @spec get_latest() :: %{String.t() => WeatherflowTempest.Client.Hub.t()}
   def get_latest() do
     GenServer.call(__MODULE__, {:get_latest})
   end
@@ -96,6 +97,7 @@ defmodule WeatherflowTempest.Client do
   @doc """
   Get the total number of UDP packets and errors received by the client.
   """
+  @spec get_packet_stats() :: map()
   def get_packet_stats() do
     GenServer.call(__MODULE__, {:get_packet_stats})
   end
@@ -103,6 +105,7 @@ defmodule WeatherflowTempest.Client do
   @doc """
   Get a list of serial numbers of Weatherflow Hubs that have been heard from.
   """
+  @spec get_hub_serials() :: [String.t()]
   def get_hub_serials() do
     GenServer.call(__MODULE__, {:get_hub_serials})
   end
