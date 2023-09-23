@@ -18,6 +18,7 @@ defmodule WeatherflowTempest.ClientTest do
     end
   end
 
+
   # Notes:
   # - Should we check that no *other* messages are in the inbox?
   #   refute_receive to check that that the client isn't sending extra data?
@@ -45,6 +46,24 @@ defmodule WeatherflowTempest.ClientTest do
            }} = mock_receive_message("{\"badpacket\":malformed JSON\"}")
   end
 
+  # We're going to do one arbitrary test for multiple callbacks to make sure
+  # that they all get called.
+  # This is not, perhaps, ideal, but because we understand that the
+  # Client.maybe_do_callbacks is DRY'd we will assume that if it works in 
+  # one it will work in all.
+  test "does multiple callbacks if provided them" do
+    {:noreply, _new_state} = mock_receive_message(F.example_evt_precip,
+      %State{
+        callback_funcs: [
+          fn(t,o) -> send self(), {:called_back1, t, o} end,
+          fn(t,o) -> send self(), {:called_back2, t, o} end,
+        ]
+      })
+    assert_receive {:called_back, :event_precipitation, _}
+    assert_receive {:called_back1, :event_precipitation, _}
+    assert_receive {:called_back2, :event_precipitation, _}
+  end
+
   # The following tests are designed to ensure that each type of message causes
   # the expected events when it is received by the client.
   # What we want is to make sure that each message updates the state in the
@@ -58,6 +77,7 @@ defmodule WeatherflowTempest.ClientTest do
       {:evt_precip, e} = Protocol.handle_json(Jason.decode(F.example_evt_precip))
       {:noreply, new_state} = mock_receive_message(F.example_evt_precip)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -68,12 +88,15 @@ defmodule WeatherflowTempest.ClientTest do
               }}}} == new_state
       assert_receive {{:weatherflow, :event_precipitation}, pubsub_obj}
       assert pubsub_obj == e
+      assert_receive {:called_back, :event_precipitation, callback_obj}
+      assert callback_obj == e
     end
     test "evt_strike" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:evt_strike, e} = Protocol.handle_json(Jason.decode(F.example_evt_strike))
       {:noreply, new_state} = mock_receive_message(F.example_evt_strike)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -86,12 +109,15 @@ defmodule WeatherflowTempest.ClientTest do
               }}}} == new_state
       assert_receive {{:weatherflow, :event_strike}, pubsub_obj}
       assert pubsub_obj == e
+      assert_receive {:called_back, :event_strike, callback_obj}
+      assert callback_obj == e
     end
     test "rapid_wind" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:rapid_wind, e} = Protocol.handle_json(Jason.decode(F.example_rapid_wind))
       {:noreply, new_state} = mock_receive_message(F.example_rapid_wind)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -104,12 +130,15 @@ defmodule WeatherflowTempest.ClientTest do
               }}}} == new_state
       assert_receive {{:weatherflow, :rapid_wind}, pubsub_obj}
       assert pubsub_obj == e
+      assert_receive {:called_back, :rapid_wind, callback_obj}
+      assert callback_obj == e
     end
     test "obs_air" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:obs_air, e} = Protocol.handle_json(Jason.decode(F.example_obs_air))
       {:noreply, new_state} = mock_receive_message(F.example_obs_air)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -125,10 +154,12 @@ defmodule WeatherflowTempest.ClientTest do
                                |> Map.merge(Enum.at(e.observations, 0))
       assert_receive {{:weatherflow, :observation_air}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
+      assert_receive {:called_back, :observation_air, callback_obj}
+      assert callback_obj == expected_flattened_obj
     end
     test "obs_air with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
-      {:noreply, new_state} = mock_receive_message(F.obs_air_with_two_observations)
+      {:noreply, new_state} = mock_receive_message(F.obs_air_with_two_observations, %State{}, false)
       assert_next_receive {{:weatherflow, :observation_air}, %{timestamp: ~U[2017-04-26 00:00:35Z]}}
       assert_next_receive {{:weatherflow, :observation_air}, %{timestamp: ~U[2017-04-26 00:01:05Z]}}
       # assert that the most recent observation is in the state
@@ -144,6 +175,7 @@ defmodule WeatherflowTempest.ClientTest do
       {:obs_sky, e} = Protocol.handle_json(Jason.decode(F.example_obs_sky))
       {:noreply, new_state} = mock_receive_message(F.example_obs_sky)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -159,10 +191,12 @@ defmodule WeatherflowTempest.ClientTest do
                                |> Map.merge(Enum.at(e.observations, 0))
       assert_receive {{:weatherflow, :observation_sky}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
+      assert_receive {:called_back, :observation_sky, callback_obj}
+      assert callback_obj == expected_flattened_obj
     end
     test "obs_sky with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
-      {:noreply, new_state} = mock_receive_message(F.obs_sky_with_multiple_observations)
+      {:noreply, new_state} = mock_receive_message(F.obs_sky_with_multiple_observations, %State{}, false)
       assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:28:00Z]}}
       assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:28:30Z]}}
       assert_next_receive {{:weatherflow, :observation_sky}, %{timestamp: ~U[2017-04-27 19:29:00Z]}}
@@ -180,6 +214,7 @@ defmodule WeatherflowTempest.ClientTest do
       {:obs_st, e} = Protocol.handle_json(Jason.decode(F.example_obs_st))
       {:noreply, new_state} = mock_receive_message(F.example_obs_st)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -195,10 +230,12 @@ defmodule WeatherflowTempest.ClientTest do
                                |> Map.merge(Enum.at(e.observations, 0))
       assert_receive {{:weatherflow, :observation_tempest}, pubsub_obj}
       assert pubsub_obj == expected_flattened_obj
+      assert_receive {:called_back, :observation_tempest, callback_obj}
+      assert callback_obj == expected_flattened_obj
     end
     test "obs_st with multiple observations" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
-      {:noreply, new_state} = mock_receive_message(F.obs_st_with_multiple_observations)
+      {:noreply, new_state} = mock_receive_message(F.obs_st_with_multiple_observations, %State{}, false)
       assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:36:24Z]}}
       assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:36:54Z]}}
       assert_next_receive {{:weatherflow, :observation_tempest}, %{timestamp: ~U[2020-05-08 14:37:24Z]}}
@@ -216,6 +253,7 @@ defmodule WeatherflowTempest.ClientTest do
       {:device_status, e} = Protocol.handle_json(Jason.decode(F.example_device_status))
       {:noreply, new_state} = mock_receive_message(F.example_device_status)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -235,12 +273,15 @@ defmodule WeatherflowTempest.ClientTest do
               }}}}} == new_state
       assert_receive {{:weatherflow, :device_status}, pubsub_obj}
       assert pubsub_obj == e
+      assert_receive {:called_back, :device_status, callback_obj}
+      assert callback_obj == e
     end
     test "hub_status" do
       WeatherflowTempest.PubSub.subscribe_to_udp_events()
       {:hub_status, e} = Protocol.handle_json(Jason.decode(F.example_hub_status))
       {:noreply, new_state} = mock_receive_message(F.example_hub_status)
       assert %State{
+                callback_funcs: [&callback_test/2],
                 packets_parsed: 1,
                 packet_errors: 0,
                 hubs: %{e.hub_sn =>
@@ -260,6 +301,8 @@ defmodule WeatherflowTempest.ClientTest do
               }}}} == new_state
       assert_receive {{:weatherflow, :hub_status}, pubsub_obj}
       assert pubsub_obj == e
+      assert_receive {:called_back, :hub_status, callback_obj}
+      assert callback_obj == e
     end
   end
 
@@ -282,6 +325,7 @@ defmodule WeatherflowTempest.ClientTest do
                     %{serial_number: "SK-00006666",
                       hub_sn: "HB-00007777"}}
               }, _final_state} = Client.handle_call({:get_latest}, self(), second_state)
+
   end
 
   test "returns the packet stats in the correct map format" do
@@ -312,8 +356,18 @@ defmodule WeatherflowTempest.ClientTest do
   # Helper functions
   #####
 
-  defp mock_receive_message(json_payload, old_state \\ %State{}) do
-    Client.handle_info({:udp, nil, nil, nil, json_payload}, old_state)
+  def callback_test(event_type, event_data) do
+    send self(), {:called_back, event_type, event_data}
+  end
+
+  defp mock_receive_message(json_payload, old_state \\ %State{}, do_callback \\ true) do
+    new_callback_funcs = case do_callback do
+      false -> old_state.callback_funcs
+      true  -> old_state.callback_funcs ++ [&callback_test/2]
+    end
+      
+    old_state_maybe_with_callback = %{old_state | callback_funcs: new_callback_funcs}
+    Client.handle_info({:udp, nil, nil, nil, json_payload}, old_state_maybe_with_callback)
   end
 
 end
