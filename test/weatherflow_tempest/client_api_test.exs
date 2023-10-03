@@ -4,15 +4,16 @@ defmodule WeatherflowTempest.ClientAPITest do
   alias WeatherflowTempest.Client.Hub
   alias WeatherflowTempest.JSONFixtures, as: F
 
-  # These tests are broken out into their own module because they cann't be run
+  # These tests are broken out into their own module because they can't be run
   # async, since they each start a supervised fresh client (to ensure it has no
   # data from previous tests). 
   # We don't want to run all the OTHER tests as async: false, so these live on
   # their own.
   #
-  # Note that these tests are redundant, because the previous tests of the handle_*
-  # functions are successfully testing the functionality.
-  # These are here **simply** to ensure that we don't break the Client.* API.
+  # Note that these tests are redundant, because the previous tests of the
+  # handle_* functions are successfully testing the functionality.
+  # These are here **simply** to ensure that we don't break the Client.function
+  # API.
   # If any of the previous three tests are changed these should be changed
   # to match. This could be DRY'd up, but it's probably not worth it now.
   describe "front-end API function:" do

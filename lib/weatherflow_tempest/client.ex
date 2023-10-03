@@ -19,7 +19,7 @@ defmodule WeatherflowTempest.Client do
   It is unclear when the devices will actually return a list of observations in
   a single "obs" list, and in testing with live devices it hasn't actually been
   observed.   
-  However, to accomodate the case that it might happen what we'll do is create
+  However, to accommodate the case that it might happen what we'll do is create
   a unique event for every item in the observation list, and emit them in order
   of ascending timestamp. These will be the flattened events described above.  
   This simplifies handling the events from the perspective of users of the

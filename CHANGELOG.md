@@ -10,7 +10,7 @@
 
 * Added :hub_sn key to the hub_status event. (Duplicates the :serial_number key
   as a convenience to allow matching against :hub_sn on all event types.)
-* Added ability to pass a callback function to the client that will be used
+* Added ability to pass callback functions to the client that will be used
   to handle parsed weatherflow events. (No longer strictly depends on pubsub)
 
 ### Breaking Changes
