@@ -6,7 +6,7 @@ defmodule WeatherflowTempest.MixProject do
       app: :weatherflow_tempest,
       name: "Weatherflow Tempest",
       description: "A library for handling the data from the LAN API for WeatherFlow weather stations.",
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.11", # ExDoc 0.29 requires 1.11
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
