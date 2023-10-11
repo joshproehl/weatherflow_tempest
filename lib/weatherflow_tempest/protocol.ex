@@ -33,6 +33,12 @@ defmodule WeatherflowTempest.Protocol do
     integer, according to the API examples. We do **not** convert that integer to
     a string since it's unclear what Weatherflow's intent here is. Perhaps there
     will be a firmware revision "37beta2"?
+  * The actual data types of the fields is not given by the Weatherflow UDP API
+    documentation. We infer which values are floats and which are ints based on
+    their examples only. There is no guarantee that this is correct. Did they
+    show "0" for an example but may actually return "0.1"? Because of this we
+    will not attempt to coerce any values or parse anything that we aren't
+    absolutely certain of.
   """
 
   use Timex
@@ -225,7 +231,7 @@ defmodule WeatherflowTempest.Protocol do
    |> Map.put(:relative_humidity_percent, Enum.at(obj, 3))
    |> Map.put(:lightningstrike_count, Enum.at(obj, 4))
    |> Map.put(:lightningstrike_avg_distance_km, Enum.at(obj, 5))
-   |> Map.put(:battery, Enum.at(obj, 6))
+   |> Map.put(:battery_volts, Enum.at(obj, 6))
    |> Map.put(:reportinterval_minutes, Enum.at(obj, 7))
   end
 
@@ -242,7 +248,7 @@ defmodule WeatherflowTempest.Protocol do
     |> Map.put(:battery_volts, Enum.at(obj, 8))
     |> Map.put(:reportinterval_minutes, Enum.at(obj, 9))
     |> Map.put(:solar_radiation_wm2, Enum.at(obj, 10))
-    |> Map.put(:local_day_rain_accumulation, Enum.at(obj, 11))
+    |> Map.put(:local_day_rain_accumulation_mm, Enum.at(obj, 11))
     |> Map.put(:precipitation_type, precip_type(Enum.at(obj, 12)))
     |> Map.put(:wind_sample_interval_seconds, Enum.at(obj, 13))
   end

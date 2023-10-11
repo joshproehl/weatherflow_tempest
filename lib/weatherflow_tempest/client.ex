@@ -113,6 +113,13 @@ defmodule WeatherflowTempest.Client do
   we embed the product type in the data, which would be a bit less clear to
   handle since each type of observation contains different fields.)
 
+  Note that we make no effort to coerce any data types from the API, since
+  the UDP API does not document it's data types. The examples shown below
+  use the same data as the examples in the Weatherflow API docs for each
+  event type. We assume that the values shown in their examples are
+  standardized, and if the API returns a float they would have shown 0.0.
+  Who knows though. So handle with care.
+
   Examples of the map returned by all event types are documented below:
 
   #### :event_precipitation
@@ -150,18 +157,14 @@ defmodule WeatherflowTempest.Client do
     serial_number: "AR-00004049",
     hub_sn: "HB-00000001",
     firmware_revision: 17,
-    observations: [
-      %{
-        timestamp: ~U[2017-04-26 00:00:35Z],
-        station_pressure_MB: 835.0,
-        air_temperature_C: 10.0,
-        relative_humidity_percent: 45,
-        lightningstrike_count: 0,
-        lightningstrike_avg_distance_km: 0,
-        battery: 3.46,
-        reportinterval_mintues: 1
-      }
-    ]
+    timestamp: ~U[2017-04-26 00:00:35Z],
+    station_pressure_MB: 835.0,
+    air_temperature_C: 10.0,
+    relative_humidity_percent: 45,
+    lightningstrike_count: 0,
+    lightningstrike_avg_distance_km: 0,
+    battery: 3.46,
+    reportinterval_mintues: 1
   }
   ```
 
@@ -171,26 +174,25 @@ defmodule WeatherflowTempest.Client do
     serial_number: "SK-00008453",
     hub_sn: "HB-00000001",
     firmware_revision: 29,
-    observations: [
-      %{
-        timestamp: ~U[2017-04-27 19:29:00Z],
-        illuminance_lux: 9000,
-        uv_index: 10,
-        rain_accumulated_mm: 0.0,
-        wind_lull_ms: 2.6,
-        wind_avg_ms: 4.6,
-        wind_gust_ms: 7.4,
-        wind_direction_degrees: 187,
-        battery_volts: 3.12,
-        reportinterval_minutes: 1,
-        solar_radiation_wm2: 130,
-        local_day_rain_accumulation: nil,
-        precipitation_type: :none,
-        wind_sample_interval_seconds: 3
-      }
-    ]
+    timestamp: ~U[2017-04-27 19:29:00Z],
+    illuminance_lux: 9000,
+    uv_index: 10,
+    rain_accumulated_mm: 0.0,
+    wind_lull_ms: 2.6,
+    wind_avg_ms: 4.6,
+    wind_gust_ms: 7.4,
+    wind_direction_degrees: 187,
+    battery_volts: 3.12,
+    reportinterval_minutes: 1,
+    solar_radiation_wm2: 130,
+    local_day_rain_accumulation: nil,
+    precipitation_type: :none,
+    wind_sample_interval_seconds: 3
   }
   ```
+  Note that the "precipitation_type" field is parsed to a human-readable format
+  rather than the strict integer format used by the API. Values returned will
+  be one of :none, :rain, :hail, or :rain_plus_hail
 
   #### :observation_tempest
   ```elixir
@@ -198,30 +200,29 @@ defmodule WeatherflowTempest.Client do
     serial_number: "ST-00000512",
     hub_sn: "HB-00013030",
     firmware_revision: 129,
-    observations: [
-      %{
-        timestamp: ~U[2020-05-08 14:36:54Z],
-        wind_lull_ms: 0.18,
-        wind_avg_ms: 0.22,
-        wind_gust_ms: 0.27,
-        wind_direction_degrees: 144,
-        wind_sample_interval_seconds: 6,
-        station_pressure_MB: 1017.57,
-        air_temperature_C: 22.37,
-        relative_humidity_percent: 50.26,
-        illuminance_lux: 328,
-        uv_index: 0.03,
-        solar_radiation_wm2: 3,
-        precip_accumulated_mm: 0.000000,
-        precipitation_type: :none,
-        lightningstrike_avg_distance_km: 0,
-        lightningstrike_count: 0,
-        battery_volts: 2.410,
-        reportinterval_minutes: 1
-      }
-    ]
+    timestamp: ~U[2020-05-08 14:36:54Z],
+    wind_lull_ms: 0.18,
+    wind_avg_ms: 0.22,
+    wind_gust_ms: 0.27,
+    wind_direction_degrees: 144,
+    wind_sample_interval_seconds: 6,
+    station_pressure_MB: 1017.57,
+    air_temperature_C: 22.37,
+    relative_humidity_percent: 50.26,
+    illuminance_lux: 328,
+    uv_index: 0.03,
+    solar_radiation_wm2: 3,
+    precip_accumulated_mm: 0.000000,
+    precipitation_type: :none,
+    lightningstrike_avg_distance_km: 0,
+    lightningstrike_count: 0,
+    battery_volts: 2.410,
+    reportinterval_minutes: 1
   }
   ```
+  Note that the "precipitation_type" field is parsed to a human-readable format
+  rather than the strict integer format used by the API. Values returned will
+  be one of :none, :rain, :hail, or :rain_plus_hail
 
   #### :device_status
   ```elixir
