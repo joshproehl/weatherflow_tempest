@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.1
+
+* Documentation updates, including fixing incorrect examples
+
+### Breaking Changes
+
+* Changed rain accumulation field in Sky observations to include units.
+  local_day_rain_accumulation became local_day_rain_accumulation_mm
+* Changed battery field in Air observations to include units. 
+  It is now battery_volts, like the other device types use.
+
 ## 1.0.0
 
 * Update Elixir dependency to 1.10 or greater
