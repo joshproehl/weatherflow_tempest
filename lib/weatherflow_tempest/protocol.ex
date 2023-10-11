@@ -225,7 +225,7 @@ defmodule WeatherflowTempest.Protocol do
    |> Map.put(:relative_humidity_percent, Enum.at(obj, 3))
    |> Map.put(:lightningstrike_count, Enum.at(obj, 4))
    |> Map.put(:lightningstrike_avg_distance_km, Enum.at(obj, 5))
-   |> Map.put(:battery, Enum.at(obj, 6))
+   |> Map.put(:battery_volts, Enum.at(obj, 6))
    |> Map.put(:reportinterval_minutes, Enum.at(obj, 7))
   end
 
