@@ -113,6 +113,13 @@ defmodule WeatherflowTempest.Client do
   we embed the product type in the data, which would be a bit less clear to
   handle since each type of observation contains different fields.)
 
+  Note that we make no effort to coerce any data types from the API, since
+  the UDP API does not document it's data types. The examples shown below
+  use the same data as the examples in the Weatherflow API docs for each
+  event type. We assume that the values shown in their examples are
+  standardized, and if the API returns a float they would have shown 0.0.
+  Who knows though. So handle with care.
+
   Examples of the map returned by all event types are documented below:
 
   #### :event_precipitation

@@ -33,6 +33,12 @@ defmodule WeatherflowTempest.Protocol do
     integer, according to the API examples. We do **not** convert that integer to
     a string since it's unclear what Weatherflow's intent here is. Perhaps there
     will be a firmware revision "37beta2"?
+  * The actual data types of the fields is not given by the Weatherflow UDP API
+    documentation. We infer which values are floats and which are ints based on
+    their examples only. There is no guarantee that this is correct. Did they
+    show "0" for an example but may actually return "0.1"? Because of this we
+    will not attempt to coerce any values or parse anything that we aren't
+    absolutely certain of.
   """
 
   use Timex
