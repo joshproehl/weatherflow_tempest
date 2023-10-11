@@ -51,8 +51,8 @@ config :weatherflow_tempest, pubsub_name: MyApp.PubSub
 # Example PubSub usage in a LiveView #
 
 def mount(_params, _session, socket) do
-    WeatherflowTempest.PubSub.subscribe_to_udp_events()
-    {:ok, socket}
+  WeatherflowTempest.PubSub.subscribe_to_udp_events()
+  {:ok, socket}
 end
 
 def handle_info({{:weatherflow, event_type}, event_data}, socket) do
