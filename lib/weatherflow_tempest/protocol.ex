@@ -242,7 +242,7 @@ defmodule WeatherflowTempest.Protocol do
     |> Map.put(:battery_volts, Enum.at(obj, 8))
     |> Map.put(:reportinterval_minutes, Enum.at(obj, 9))
     |> Map.put(:solar_radiation_wm2, Enum.at(obj, 10))
-    |> Map.put(:local_day_rain_accumulation, Enum.at(obj, 11))
+    |> Map.put(:local_day_rain_accumulation_mm, Enum.at(obj, 11))
     |> Map.put(:precipitation_type, precip_type(Enum.at(obj, 12)))
     |> Map.put(:wind_sample_interval_seconds, Enum.at(obj, 13))
   end
