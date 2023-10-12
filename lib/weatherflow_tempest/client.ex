@@ -163,7 +163,7 @@ defmodule WeatherflowTempest.Client do
     relative_humidity_percent: 45,
     lightningstrike_count: 0,
     lightningstrike_avg_distance_km: 0,
-    battery: 3.46,
+    battery_volts: 3.46,
     reportinterval_mintues: 1
   }
   ```
@@ -185,7 +185,7 @@ defmodule WeatherflowTempest.Client do
     battery_volts: 3.12,
     reportinterval_minutes: 1,
     solar_radiation_wm2: 130,
-    local_day_rain_accumulation: nil,
+    local_day_rain_accumulation_mm: nil,
     precipitation_type: :none,
     wind_sample_interval_seconds: 3
   }

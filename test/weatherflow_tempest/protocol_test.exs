@@ -129,7 +129,7 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert ob1.relative_humidity_percent == 45
       assert ob1.lightningstrike_count == 0
       assert ob1.lightningstrike_avg_distance_km == 0
-      assert ob1.battery == 3.46
+      assert ob1.battery_volts == 3.46
       assert ob1.reportinterval_minutes == 1
     end
 
@@ -140,10 +140,10 @@ defmodule WeatherflowTempest.ProtocolTest do
       ob2 = Enum.at(res.observations, 1)
       assert ob1.timestamp == ~U[2017-04-26 00:00:35Z]
       assert ob1.station_pressure_MB == 835.0
-      assert ob1.battery == 3.46
+      assert ob1.battery_volts == 3.46
       assert ob2.timestamp == ~U[2017-04-26 00:01:05Z]
       assert ob2.station_pressure_MB == 836.0
-      assert ob2.battery == 3.45
+      assert ob2.battery_volts == 3.45
     end
   end
 
@@ -182,7 +182,7 @@ defmodule WeatherflowTempest.ProtocolTest do
       assert ob1.battery_volts == 3.12
       assert ob1.reportinterval_minutes == 1
       assert ob1.solar_radiation_wm2 == 130
-      assert ob1.local_day_rain_accumulation == nil
+      assert ob1.local_day_rain_accumulation_mm == nil
       assert ob1.precipitation_type == :none
       assert ob1.wind_sample_interval_seconds == 3
     end
