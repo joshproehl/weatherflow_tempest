@@ -6,4 +6,4 @@ import Config
 # both the library and a client using it at the same time.
 config :weatherflow_tempest, listen_port: 0
 
-config :weatherflow_tempest, pubsub_name: WeatherflowTempestTest
+config :weatherflow_tempest, pubsub_name: WeatherflowTempestTestPubSub

@@ -5,9 +5,8 @@ defmodule WeatherflowTempest.Application do
 
   def start(_type, _agrs) do
     children =
-      []
-      ++ maybe_start_client()
-      ++ maybe_start_pubsub()
+      [] ++
+        maybe_start_client()
 
     opts = [strategy: :one_for_one, name: WeatherflowTempest]
     Supervisor.start_link(children, opts)
@@ -18,22 +17,14 @@ defmodule WeatherflowTempest.Application do
   # "callbacks only" mode.
   defp maybe_start_client() do
     case Application.get_env(:weatherflow_tempest, :callbacks_only) do
-      true -> []
-      _    -> case Mix.env do
-                :test -> []
-                _     -> [{WeatherflowTempest.Client, []}]
-              end
-    end
-  end
+      true ->
+        []
 
-  # The pubsub needs to be started in the test environment.
-  # The possibility to start it in other envs is actually legacy, from when we
-  # might have been starting our own custom PubSub. That's not currently a
-  # feature, but if we bought that back this is where we'd do it.
-  defp maybe_start_pubsub() do
-    case Mix.env() do
-      :test -> [{Phoenix.PubSub, [name: Application.get_env(:weatherflow_tempest, :pubsub_name)]}]
-      _ -> []
+      _ ->
+        case Mix.env() do
+          :test -> []
+          _ -> [{WeatherflowTempest.Client, []}]
+        end
     end
   end
 end
